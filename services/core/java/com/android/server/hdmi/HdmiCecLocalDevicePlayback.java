@@ -121,6 +121,11 @@ public class HdmiCecLocalDevicePlayback extends HdmiCecLocalDeviceSource {
                         }
                     });
         }
+        /* add one touch play after hdmi plug in and cec initialization */
+        mService.sendCecCommand(HdmiCecMessageBuilder.buildActiveSource(
+                mAddress, mService.getPhysicalAddress()));
+        mService.sendCecCommand(HdmiCecMessageBuilder.buildTextViewOn(
+                mAddress, Constants.ADDR_TV));
         startQueuedActions();
     }
 
@@ -190,8 +195,9 @@ public class HdmiCecLocalDevicePlayback extends HdmiCecLocalDeviceSource {
         }
         switch (standbyAction) {
             case HdmiControlService.STANDBY_SCREEN_OFF:
+                /* cec cts specification requires that standby message must be broadcast */
                 mService.sendCecCommand(
-                        HdmiCecMessageBuilder.buildStandby(mAddress, Constants.ADDR_TV));
+                        HdmiCecMessageBuilder.buildStandby(mAddress, Constants.ADDR_BROADCAST));
                 break;
             case HdmiControlService.STANDBY_SHUTDOWN:
                 // ACTION_SHUTDOWN is taken as a signal to power off all the devices.
@@ -299,6 +305,12 @@ public class HdmiCecLocalDevicePlayback extends HdmiCecLocalDeviceSource {
         try {
             String iso3Language = new String(message.getParams(), 0, 3, "US-ASCII");
             Locale currentLocale = mService.getContext().getResources().getConfiguration().locale;
+
+            /* android recognizes all chinese as zho */
+            if (iso3Language.equals("chi")) {
+                Slog.i(TAG, "android set all chinese zho");
+                iso3Language = "zho";
+            }
             if (currentLocale.getISO3Language().equals(iso3Language)) {
                 // Do not switch language if the new language is the same as the current one.
                 // This helps avoid accidental country variant switching from en_US to en_AU
@@ -412,6 +424,15 @@ public class HdmiCecLocalDevicePlayback extends HdmiCecLocalDeviceSource {
             return Constants.ADDR_AUDIO_SYSTEM;
         }
         return Constants.ADDR_TV;
+    }
+
+    @ServiceThreadOnly
+    protected void sendStandby(int deviceId) {
+        assertRunOnServiceThread();
+
+        /* cec cts specification requires that standby message must be broadcast */
+        int targetAddress = Constants.ADDR_BROADCAST;
+        mService.sendCecCommand(HdmiCecMessageBuilder.buildStandby(mAddress, targetAddress));
     }
 
     @Override
