@@ -1052,9 +1052,8 @@ public class UsbDeviceManager implements ActivityManagerInternal.ScreenObserver 
                 return;
             }
 
-            // Dont show the notification when connected to a USB peripheral
-            // and the link does not support PR_SWAP and DR_SWAP
-            if (mHideUsbNotification && !mSupportsAllCombinations) {
+            // Dont show the notification when disconnected
+            if (!mConnected) {
                 if (mUsbNotificationId != 0) {
                     mNotificationManager.cancelAsUser(null, mUsbNotificationId,
                             UserHandle.ALL);
@@ -1089,24 +1088,10 @@ public class UsbDeviceManager implements ActivityManagerInternal.ScreenObserver 
                     titleRes = com.android.internal.R.string.usb_accessory_notification_title;
                     id = SystemMessage.NOTE_USB_ACCESSORY;
                 }
-                if (mSourcePower) {
-                    if (titleRes != 0) {
-                        message = r.getText(
-                                com.android.internal.R.string.usb_power_notification_message);
-                    } else {
-                        titleRes = com.android.internal.R.string.usb_supplying_notification_title;
-                        id = SystemMessage.NOTE_USB_SUPPLYING;
-                    }
-                } else if (titleRes == 0) {
+                if (titleRes == 0) {
                     titleRes = com.android.internal.R.string.usb_charging_notification_title;
                     id = SystemMessage.NOTE_USB_CHARGING;
                 }
-            } else if (mSourcePower) {
-                titleRes = com.android.internal.R.string.usb_supplying_notification_title;
-                id = SystemMessage.NOTE_USB_SUPPLYING;
-            } else if (mHostConnected && mSinkPower && mUsbCharging) {
-                titleRes = com.android.internal.R.string.usb_charging_notification_title;
-                id = SystemMessage.NOTE_USB_CHARGING;
             }
             if (id != mUsbNotificationId || force) {
                 // clear notification if title needs changing

@@ -1245,7 +1245,7 @@
     <string name="no_permissions" msgid="7283357728219338112">"無須許可"</string>
     <string name="perm_costs_money" msgid="4902470324142151116">"這可能需要付費"</string>
     <string name="dlg_ok" msgid="7376953167039865701">"確定"</string>
-    <string name="usb_charging_notification_title" msgid="1595122345358177163">"正在透過 USB 為這個裝置充電"</string>
+    <string name="usb_charging_notification_title" msgid="1595122345358177163">"正在透過 USB 連接到電腦"</string>
     <string name="usb_supplying_notification_title" msgid="4631045789893086181">"正在透過 USB 為連接的裝置充電"</string>
     <string name="usb_mtp_notification_title" msgid="4238227258391151029">"已開啟 USB 檔案傳輸模式"</string>
     <string name="usb_ptp_notification_title" msgid="5425857879922006878">"已開啟 USB PTP 模式"</string>
