@@ -1682,6 +1682,17 @@ public final class HdmiControlService extends SystemService {
         }
 
         @Override
+        public void sendStandbyTv(){
+            enforceAccessPermission();
+            runOnServiceThread(new Runnable() {
+                @Override
+                public void run() {
+                    HdmiControlService.this.sendStandbyTv();
+                }
+            });
+        }
+
+        @Override
         protected void dump(FileDescriptor fd, final PrintWriter writer, String[] args) {
             if (!DumpUtils.checkDumpPermission(getContext(), TAG, writer)) return;
             final IndentingPrintWriter pw = new IndentingPrintWriter(writer, "  ");
@@ -2225,6 +2236,13 @@ public final class HdmiControlService extends SystemService {
             }
         }
     }
+
+    void sendStandbyTv() {
+        HdmiCecLocalDevice device = mCecController.getLocalDevice(HdmiDeviceInfo.DEVICE_PLAYBACK);
+         if(device != null)
+            sendCecCommand(HdmiCecMessageBuilder.buildStandby(device.getDeviceInfo().getLogicalAddress(), Constants.ADDR_TV));
+    }
+
 
     void setStandbyMode(boolean isStandbyModeOn) {
         assertRunOnServiceThread();

@@ -109,6 +109,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
+//FOR CEC
+import android.hardware.hdmi.*;
+import android.os.ServiceManager;
+
 /**
  * The power manager service is responsible for coordinating power management
  * functions on the device.
@@ -1404,6 +1408,22 @@ public final class PowerManagerService extends SystemService
         }
 
         Trace.traceBegin(Trace.TRACE_TAG_POWER, "goToSleep");
+        //FOR CEC standbyTv
+        String isStandby = SystemProperties.get("persist.sys.cecstanbyen", "1");
+        if(isStandby.equals("1")){
+            IBinder playBinder = ServiceManager.getService(Context.HDMI_CONTROL_SERVICE);
+            if(playBinder!=null){
+                IHdmiControlService mControlService = IHdmiControlService.Stub.asInterface(playBinder);
+                if(mControlService!=null){
+                    try {
+                        Slog.i(TAG, "send cec standby command to TV");
+                        mControlService.sendStandbyTv();
+                    } catch (Exception e) {
+                        Slog.i(TAG, "fail to send cec standby command to TV" + e);
+                    }
+                }
+            }
+        }
         try {
             switch (reason) {
                 case PowerManager.GO_TO_SLEEP_REASON_DEVICE_ADMIN:
