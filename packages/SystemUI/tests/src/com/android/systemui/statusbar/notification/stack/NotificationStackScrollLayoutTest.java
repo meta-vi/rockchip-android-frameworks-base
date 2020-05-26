@@ -57,6 +57,8 @@ import com.android.systemui.classifier.FalsingManagerFake;
 import com.android.systemui.plugins.statusbar.NotificationMenuRowPlugin;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.statusbar.EmptyShadeView;
+import com.android.systemui.statusbar.NotificationLockscreenUserManager;
+import com.android.systemui.statusbar.NotificationLockscreenUserManager.UserChangedListener;
 import com.android.systemui.statusbar.NotificationPresenter;
 import com.android.systemui.statusbar.NotificationRemoteInputManager;
 import com.android.systemui.statusbar.NotificationShelf;
@@ -121,6 +123,8 @@ public class NotificationStackScrollLayoutTest extends SysuiTestCase {
     @Mock private NotificationLockscreenUserManager mLockscreenUserManager;
     private UserChangedListener mUserChangedListener;
     @Mock private KeyguardBypassController mKeyguardBypassController;
+    @Mock private NotificationLockscreenUserManager mLockscreenUserManager;
+    private UserChangedListener mUserChangedListener;
     private TestableNotificationEntryManager mEntryManager;
     private int mOriginalInterruptionModelSetting;
 
@@ -141,7 +145,7 @@ public class NotificationStackScrollLayoutTest extends SysuiTestCase {
                 mBlockingHelperManager);
         mDependency.injectTestDependency(NotificationLockscreenUserManager.class,
                 mLockscreenUserManager);
-        mDependency.injectTestDependency(SysuiStatusBarStateController.class, mBarState);
+        mDependency.injectTestDependency(StatusBarStateController.class, mBarState);
         mDependency.injectTestDependency(MetricsLogger.class, mMetricsLogger);
         mDependency.injectTestDependency(NotificationRemoteInputManager.class,
                 mRemoteInputManager);
