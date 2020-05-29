@@ -17,6 +17,7 @@
 package com.android.settingslib.display;
 
 import android.util.MathUtils;
+import android.os.SystemProperties;
 
 public class BrightnessUtils {
 
@@ -52,16 +53,20 @@ public class BrightnessUtils {
      */
     public static final int convertGammaToLinear(int val, int min, int max) {
         final float normalizedVal = MathUtils.norm(0, GAMMA_SPACE_MAX, val);
-        final float ret;
-        if (normalizedVal <= R) {
-            ret = MathUtils.sq(normalizedVal / R);
-        } else {
-            ret = MathUtils.exp((normalizedVal - C) / A) + B;
-        }
 
-        // HLG is normalized to the range [0, 12], so we need to re-normalize to the range [0, 1]
-        // in order to derive the correct setting value.
-        return Math.round(MathUtils.lerp(min, max, ret / 12));
+	if ("160".equals(SystemProperties.get("qemu.sf.lcd_density"))) {
+		final float ret;
+		if (normalizedVal <= R) {
+			ret = MathUtils.sq(normalizedVal / R);
+		} else {
+			ret = MathUtils.exp((normalizedVal - C) / A) + B;
+		}
+
+		// HLG is normalized to the range [0, 12], so we need to re-normalize to the range [0, 1]
+		// in order to derive the correct setting value.
+		return Math.round(MathUtils.lerp(min, max, ret / 12));
+	} else
+		return Math.round(MathUtils.lerp(min, max, normalizedVal));
     }
 
     /**
@@ -87,15 +92,21 @@ public class BrightnessUtils {
      * @return The corresponding slider value
      */
     public static final int convertLinearToGamma(int val, int min, int max) {
-        // For some reason, HLG normalizes to the range [0, 12] rather than [0, 1]
-        final float normalizedVal = MathUtils.norm(min, max, val) * 12;
-        final float ret;
-        if (normalizedVal <= 1f) {
-            ret = MathUtils.sqrt(normalizedVal) * R;
-        } else {
-            ret = A * MathUtils.log(normalizedVal - B) + C;
-        }
+	if ("160".equals(SystemProperties.get("qemu.sf.lcd_density"))) {
+		// For some reason, HLG normalizes to the range [0, 12] rather than [0, 1]
+		final float normalizedVal = MathUtils.norm(min, max, val) * 12;
+		final float ret;
+		if (normalizedVal <= 1f) {
+			ret = MathUtils.sqrt(normalizedVal) * R;
+		} else {
+			ret = A * MathUtils.log(normalizedVal - B) + C;
+		}
 
-        return Math.round(MathUtils.lerp(0, GAMMA_SPACE_MAX, ret));
+		return Math.round(MathUtils.lerp(0, GAMMA_SPACE_MAX, ret));
+	} else {
+		final float normalizedVal = MathUtils.norm(min, max, val);
+
+		return Math.round(MathUtils.lerp(0, GAMMA_SPACE_MAX, normalizedVal));
+	}
     }
 }
