@@ -257,12 +257,14 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
                     handleBatteryUpdate((BatteryStatus) msg.obj);
                     break;
                 case MSG_SIM_STATE_CHANGE:
+				    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_SIM_STATE_CHANGE");
                     handleSimStateChange(msg.arg1, msg.arg2, (State) msg.obj);
                     break;
                 case MSG_RINGER_MODE_CHANGED:
                     handleRingerModeChange(msg.arg1);
                     break;
                 case MSG_PHONE_STATE_CHANGED:
+				    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_PHONE_STATE_CHANGED");
                     handlePhoneStateChanged((String) msg.obj);
                     break;
                 case MSG_DEVICE_PROVISIONED:
@@ -278,9 +280,11 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
                     handleUserSwitchComplete(msg.arg1);
                     break;
                 case MSG_KEYGUARD_RESET:
+				    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_KEYGUARD_RESET");
                     handleKeyguardReset();
                     break;
                 case MSG_KEYGUARD_BOUNCER_CHANGED:
+				    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_KEYGUARD_BOUNCER_CHANGED");
                     handleKeyguardBouncerChanged(msg.arg1);
                     break;
                 case MSG_BOOT_COMPLETED:
@@ -309,19 +313,23 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
                     Trace.endSection();
                     break;
                 case MSG_SIM_SUBSCRIPTION_INFO_CHANGED:
+				    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_SIM_SUBSCRIPTION_INFO_CHANGED");
                     handleSimSubscriptionInfoChanged();
                     break;
                 case MSG_AIRPLANE_MODE_CHANGED:
                     handleAirplaneModeChanged();
                     break;
                 case MSG_SERVICE_STATE_CHANGE:
+				    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_SERVICE_STATE_CHANGE");
                     handleServiceStateChange(msg.arg1, (ServiceState) msg.obj);
                     break;
                 case MSG_SCREEN_TURNED_ON:
+				    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_SCREEN_TURNED_ON");
                     handleScreenTurnedOn();
                     break;
                 case MSG_SCREEN_TURNED_OFF:
-                    Trace.beginSection("KeyguardUpdateMonitor#handler MSG_SCREEN_TURNED_ON");
+                    //Trace.beginSection("KeyguardUpdateMonitor#handler MSG_SCREEN_TURNED_ON");
+					Trace.beginSection("KeyguardUpdateMonitor#handler MSG_SCREEN_TURNED_OFF");
                     handleScreenTurnedOff();
                     Trace.endSection();
                     break;
