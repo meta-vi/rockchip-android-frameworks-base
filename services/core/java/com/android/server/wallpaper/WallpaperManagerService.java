@@ -554,13 +554,18 @@ public class WallpaperManagerService extends IWallpaperManager.Stub
         }
 
         WallpaperColors colors = null;
+	 Bitmap bitmap = null;
         if (cropFile != null) {
-            Bitmap bitmap = BitmapFactory.decodeFile(cropFile);
-            if (bitmap != null) {
+		bitmap = BitmapFactory.decodeFile(cropFile);
+        } else {
+		InputStream wallpaperFin = WallpaperManager.openDefaultWallpaper(mContext, FLAG_SYSTEM);
+		bitmap = BitmapFactory.decodeStream(wallpaperFin);
+        }
+
+	  if (bitmap != null) {
                 colors = WallpaperColors.fromBitmap(bitmap);
                 bitmap.recycle();
-            }
-        }
+         }
 
         if (colors == null) {
             Slog.w(TAG, "Cannot extract colors because wallpaper could not be read.");
