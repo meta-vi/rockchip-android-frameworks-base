@@ -222,7 +222,7 @@ public class MediaFile {
         addFileType("MPG", FILE_TYPE_MP4, "video/mpeg", MtpConstants.FORMAT_MPEG, false);
         addFileType("MP4", FILE_TYPE_MP4, "video/mp4", MtpConstants.FORMAT_MPEG, false);
         addFileType("M4V", FILE_TYPE_M4V, "video/mp4", MtpConstants.FORMAT_MPEG, false);
-        addFileType("MOV", FILE_TYPE_QT, "video/quicktime", MtpConstants.FORMAT_MPEG, false);
+        //addFileType("MOV", FILE_TYPE_QT, "video/quicktime", MtpConstants.FORMAT_MPEG, false);
 
         addFileType("3GP", FILE_TYPE_3GPP, "video/3gpp",  MtpConstants.FORMAT_3GP_CONTAINER, true);
         addFileType("3GPP", FILE_TYPE_3GPP, "video/3gpp", MtpConstants.FORMAT_3GP_CONTAINER, false);
@@ -235,7 +235,7 @@ public class MediaFile {
         addFileType("TP", FILE_TYPE_MP2TS, "video/mp2ts");
         addFileType("TRP", FILE_TYPE_TRP, "video/mp2ts");
         addFileType("M2TS", FILE_TYPE_MP2TS, "video/mp2ts");
-        addFileType("FLV", FILE_TYPE_FLV, "video/flv");
+        //addFileType("FLV", FILE_TYPE_FLV, "video/flv");
 
         if (isWMVEnabled()) {
             addFileType("WMV", FILE_TYPE_WMV, "video/x-ms-wmv", MtpConstants.FORMAT_WMV, true);
@@ -288,6 +288,7 @@ public class MediaFile {
     }
 
     public static boolean isAudioFileType(int fileType) {
+        if(fileType == FILE_TYPE_WMA) return false;
         return ((fileType >= FIRST_AUDIO_FILE_TYPE &&
                 fileType <= LAST_AUDIO_FILE_TYPE) ||
                 (fileType >= FIRST_MIDI_FILE_TYPE &&
@@ -295,6 +296,7 @@ public class MediaFile {
     }
 
     public static boolean isVideoFileType(int fileType) {
+        if(fileType == FILE_TYPE_FLV || fileType == FILE_TYPE_WMV) return false;
         return (fileType >= FIRST_VIDEO_FILE_TYPE &&
                 fileType <= LAST_VIDEO_FILE_TYPE)
             || (fileType >= FIRST_VIDEO_FILE_TYPE2 &&
