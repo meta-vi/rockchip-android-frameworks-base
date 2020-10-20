@@ -17,6 +17,7 @@
 package com.android.settingslib.display;
 
 import android.util.MathUtils;
+import android.os.SystemProperties;
 
 public class BrightnessUtils {
 
@@ -52,6 +53,8 @@ public class BrightnessUtils {
      */
     public static final int convertGammaToLinear(int val, int min, int max) {
         final float normalizedVal = MathUtils.norm(0, GAMMA_SPACE_MAX, val);
+
+	if ("160".equals(SystemProperties.get("qemu.sf.lcd_density"))) {
         final float ret;
         if (normalizedVal <= R) {
             ret = MathUtils.sq(normalizedVal / R);
@@ -62,6 +65,8 @@ public class BrightnessUtils {
         // HLG is normalized to the range [0, 12], so we need to re-normalize to the range [0, 1]
         // in order to derive the correct setting value.
         return Math.round(MathUtils.lerp(min, max, ret / 12));
+	} else
+		return Math.round(MathUtils.lerp(min, max, normalizedVal));
     }
 
     /**
