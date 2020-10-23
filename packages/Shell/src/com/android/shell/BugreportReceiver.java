@@ -21,12 +21,19 @@ import static com.android.shell.BugreportProgressService.EXTRA_ORIGINAL_INTENT;
 import static com.android.shell.BugreportProgressService.INTENT_BUGREPORT_FINISHED;
 import static com.android.shell.BugreportProgressService.getFileExtra;
 import static com.android.shell.BugreportProgressService.dumpIntent;
+import static com.android.shell.BugreportProgressService.EXTRA_SCREENSHOT;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ComponentName;
 import android.os.AsyncTask;
 import android.os.FileUtils;
 import android.text.format.DateUtils;
@@ -52,6 +59,11 @@ public class BugreportReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive(): " + dumpIntent(intent));
+        final File bugreportFile = getFileExtra(intent, EXTRA_BUGREPORT);
+        final File screenshotFile = getFileExtra(intent, EXTRA_SCREENSHOT);
+
+        copyFileToLogs(context, bugreportFile, screenshotFile);
+
         // Clean up older bugreports in background
         cleanupOldFiles(this, intent, INTENT_BUGREPORT_FINISHED, MIN_KEEP_COUNT, MIN_KEEP_AGE);
 
@@ -84,5 +96,38 @@ public class BugreportReceiver extends BroadcastReceiver {
                 return null;
             }
         }.execute();
+    }
+
+	private static void copyFileToLogs(Context context, File report, File screenshot) {
+        String LOGS_PATH = "/sdcard/Logs/";
+        try {
+            if(!new File(LOGS_PATH).exists())
+                return;
+            if(report.isFile())
+                copyFileUsingFileStreams(report, new File(LOGS_PATH + report.getName()));
+            if(screenshot.isFile())
+                copyFileUsingFileStreams(screenshot, new File(LOGS_PATH + screenshot.getName()));
+        } catch (Exception e) {
+        }
+        Intent bIntent = new Intent();
+        bIntent.setComponent(new ComponentName("com.asus.debugger","com.asus.debugger.DebuggerIntentReceiver"));
+        bIntent.setAction("com.asus.debugger.intent_action.DUMPSTATE_DONE");
+        context.sendBroadcast(bIntent);
+    }
+
+    private static void copyFileUsingFileStreams(File source, File dest) throws IOException {
+        InputStream input = null;
+        OutputStream output = null;
+        try {
+            input = new FileInputStream(source);
+            output = new FileOutputStream(dest);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = input.read(buf)) > 0)
+                output.write(buf, 0, bytesRead);
+        } finally {
+            input.close();
+            output.close();
+        }
     }
 }
