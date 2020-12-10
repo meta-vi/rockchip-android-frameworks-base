@@ -29,6 +29,7 @@ import android.hardware.weaver.V1_0.WeaverReadResponse;
 import android.hardware.weaver.V1_0.WeaverReadStatus;
 import android.hardware.weaver.V1_0.WeaverStatus;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.UserManager;
 import android.security.GateKeeper;
 import android.security.Scrypt;
@@ -448,6 +449,16 @@ public class SyntheticPasswordManager {
         }
         if (value == null) {
             value = secureRandom(mWeaverConfig.valueSize);
+        }
+
+        boolean runningCTS = "true".equals(SystemProperties.get("cts_gts.status", "false"));
+        boolean alreadyAsyncMode = "false".equals(SystemProperties.get("cts_gts.weaver_block_thread", "true"));
+        if (runningCTS) {
+            // CTS, force use sync mode
+            SystemProperties.set("cts_gts.weaver_block_thread", "true");
+        } else if (!alreadyAsyncMode) {
+            // Non-CTS & weaver_block_thread is true or empty, async mode
+            SystemProperties.set("cts_gts.weaver_block_thread", "false");
         }
         try {
             int writeStatus = mWeaver.write(slot, toByteArrayList(key), toByteArrayList(value));
