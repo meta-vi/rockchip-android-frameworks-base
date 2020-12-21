@@ -58,6 +58,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.io.File;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -97,6 +98,8 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
 
     private BrightnessMirrorController mBrightnessMirrorController;
     private View mDivider;
+
+    private static final String CHECK_DSI_SYSFS_PATH = "/sys/class/drm/card0-DSI-1/status";
 
     public QSPanel(Context context) {
         this(context, null);
@@ -329,6 +332,12 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
             ToggleSliderView brightnessSlider = findViewById(R.id.brightness_slider);
             ToggleSliderView mirrorSlider = mBrightnessMirrorController.getMirror()
                     .findViewById(R.id.brightness_slider);
+            File file = new File(CHECK_DSI_SYSFS_PATH);
+
+            if(!file.exists()) {
+                brightnessSlider.setVisibility(GONE);
+                mirrorSlider.setVisibility(GONE);
+            }
             brightnessSlider.setMirror(mirrorSlider);
             brightnessSlider.setMirrorController(mBrightnessMirrorController);
         }
