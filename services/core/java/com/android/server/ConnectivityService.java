@@ -57,8 +57,6 @@ import static android.os.Process.INVALID_UID;
 import static android.system.OsConstants.IPPROTO_TCP;
 import static android.system.OsConstants.IPPROTO_UDP;
 
-import android.net.wifi.WifiManager;
-
 import static java.util.Map.Entry;
 
 import android.Manifest;
@@ -214,6 +212,7 @@ import com.android.server.connectivity.NetworkRanker;
 import com.android.server.connectivity.PermissionMonitor;
 import com.android.server.connectivity.ProxyTracker;
 import com.android.server.connectivity.Vpn;
+import com.android.server.connectivity.WifiSleepController;
 import com.android.server.net.BaseNetdEventCallback;
 import com.android.server.net.BaseNetworkObserver;
 import com.android.server.net.LockdownVpnTracker;
@@ -598,12 +597,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
     private final DnsManager mDnsManager;
     private final NetworkRanker mNetworkRanker;
 
-    static final int WIFI_DISABLED = 0;
-    static final int WIFI_ENABLED = 1;
-    private boolean mWifiNeedToOpen = false;
-    private PowerManager.WakeLock mWifiWakeLock;
-    private WifiManager mWifiManager;
-    private DataReceiver mDataReceiver = new DataReceiver();
+    private final WifiSleepController mWifiSleepController;
 
     private boolean mSystemReady;
     private Intent mInitialBroadcast;
@@ -1176,64 +1170,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
         mDnsManager = new DnsManager(mContext, mDnsResolver, mSystemProperties);
         registerPrivateDnsSettingsCallbacks();
 
-	boolean mWifiSleepConfig = SystemProperties.getBoolean("ro.wifi.sleep.power.down", false);
-	if(mWifiSleepConfig) {
-		PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-		mWifiWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WifiSleepPowerDown");
-		mWifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(Intent.ACTION_SCREEN_ON);
-		filter.addAction(Intent.ACTION_SCREEN_OFF);
-		mContext.registerReceiver(mDataReceiver, filter);
-	}
-    }
-
-    private class DataReceiver extends BroadcastReceiver {
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		String action = intent.getAction();
-		log("onReceive, action=" + action);
-		log("mWifiNeedToOpen =" + mWifiNeedToOpen);
-		if (action.equals(Intent.ACTION_SCREEN_ON)) {
-			if(mWifiNeedToOpen) {
-				setWifiEnabled(true);
-			}
-		} else if (action.equals(Intent.ACTION_SCREEN_OFF)) {
-			if(getWifiState() == WIFI_ENABLED) {
-				mWifiNeedToOpen = true;
-				setWifiEnabled(false);
-			} else {
-				mWifiNeedToOpen = false;
-			}
-		}
-	}
-    }
-
-    private int getWifiState() {
-	final ContentResolver cr = mContext.getContentResolver();
-	try {
-		return Settings.Global.getInt(cr, Settings.Global.WIFI_ON);
-	} catch (Settings.SettingNotFoundException e) {
-		Settings.Global.putInt(cr, Settings.Global.WIFI_ON, WIFI_DISABLED);
-		return WIFI_DISABLED;
-	}
-    }
-
-    private void setWifiEnabled(boolean enable) {
-	log("setWifiEnabled " + enable);
-	if (!mWifiWakeLock.isHeld()) {
-		log("---- mWifiWakeLock.acquire ----");
-		mWifiWakeLock.acquire();
-	}
-	mWifiManager.setWifiEnabled(enable);
-	if (mWifiWakeLock.isHeld()) {
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException ignore) {
-		}
-		log("---- mWifiWakeLock.release ----");
-		mWifiWakeLock.release();
-	}
+	mWifiSleepController = new WifiSleepController(mContext);
     }
 
     private static NetworkCapabilities createDefaultNetworkCapabilitiesForUid(int uid) {
