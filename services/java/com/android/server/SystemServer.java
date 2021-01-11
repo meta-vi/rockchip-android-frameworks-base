@@ -150,7 +150,6 @@ import com.android.server.policy.PermissionPolicyService;
 import com.android.server.policy.PhoneWindowManager;
 import com.android.server.policy.role.LegacyRoleResolutionPolicy;
 import com.android.server.power.PowerManagerService;
-import com.android.server.eink.EinkService;
 import com.android.server.power.ShutdownThread;
 import com.android.server.power.ThermalManagerService;
 import com.android.server.recoverysystem.RecoverySystemService;
@@ -1136,11 +1135,7 @@ public final class SystemServer {
             dynamicSystem = new DynamicSystemService(context);
             ServiceManager.addService("dynamic_system", dynamicSystem);
             t.traceEnd();
-//zj add b
-            t.traceBegin("StartEinkService");
-            ServiceManager.addService(Context.EINK_SERVICE,new EinkService(context));
-            t.traceEnd();
-//zj add e
+
             if (!isWatch) {
                 t.traceBegin("StartConsumerIrService");
                 consumerIr = new ConsumerIrService(context);

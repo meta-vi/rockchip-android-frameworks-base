@@ -3382,7 +3382,6 @@ public abstract class Context {
     /** @hide */
     @StringDef(suffix = { "_SERVICE" }, value = {
             POWER_SERVICE,
-            EINK_SERVICE,
             WINDOW_SERVICE,
             LAYOUT_INFLATER_SERVICE,
             ACCOUNT_SERVICE,
@@ -3526,8 +3525,6 @@ public abstract class Context {
      *  visual bounds of an area on screen.
      *  <dt> {@link #POWER_SERVICE} ("power")
      *  <dd> A {@link android.os.PowerManager} for controlling power
-     *  <dt> {@link #EINK_SERVICE} ("eink")
-     *  <dd> A {@link android.os.EinkManager} for controlling eink
      *  management.
      *  <dt> {@link #ALARM_SERVICE} ("alarm")
      *  <dd> A {@link android.app.AlarmManager} for receiving intents at the
@@ -3610,8 +3607,6 @@ public abstract class Context {
      * @see android.app.ActivityManager
      * @see #POWER_SERVICE
      * @see android.os.PowerManager
-     * @see #EINK_SERVICE
-     * @see android.os.EinkManager
      * @see #ALARM_SERVICE
      * @see android.app.AlarmManager
      * @see #NOTIFICATION_SERVICE
@@ -3668,7 +3663,6 @@ public abstract class Context {
      * Currently available classes are:
      * {@link android.view.WindowManager}, {@link android.view.LayoutInflater},
      * {@link android.app.ActivityManager}, {@link android.os.PowerManager},
-     * {@link android.os.EinkManager},
      * {@link android.app.AlarmManager}, {@link android.app.NotificationManager},
      * {@link android.app.KeyguardManager}, {@link android.location.LocationManager},
      * {@link android.app.SearchManager}, {@link android.os.Vibrator},
@@ -3727,11 +3721,6 @@ public abstract class Context {
      */
     public static final String POWER_SERVICE = "power";
 
-    /**
-     * Use with {@link #getSystemService(String)} to retrieve a
-     * {@link android.os.EinkManager} for controlling eink management,
-     */
-    public static final String EINK_SERVICE = "eink";
     /**
      * Use with {@link #getSystemService(String)} to retrieve a
      * {@link android.os.RecoverySystem} for accessing the recovery system

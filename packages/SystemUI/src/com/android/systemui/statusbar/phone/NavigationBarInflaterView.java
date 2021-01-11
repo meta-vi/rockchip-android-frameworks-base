@@ -42,7 +42,7 @@ import com.android.systemui.statusbar.policy.KeyButtonView;
 
 import java.io.PrintWriter;
 import java.util.Objects;
-import android.content.pm.PackageManager;
+
 public class NavigationBarInflaterView extends FrameLayout
         implements NavigationModeController.ModeChangedListener {
 
@@ -66,7 +66,6 @@ public class NavigationBarInflaterView extends FrameLayout
     public static final String IME_SWITCHER = "ime_switcher";
     public static final String SCREENSHOT = "screenshot";
     public static final String VOLUME_ADD = "volume_add";
-    public static final String REFRESH = "refresh";
     public static final String VOLUME_SUB = "volume_sub";
 
     public static final String GRAVITY_SEPARATOR = ";";
@@ -404,8 +403,6 @@ public class NavigationBarInflaterView extends FrameLayout
             v = inflater.inflate(R.layout.screenshot, parent, false);
         } else if (VOLUME_ADD.equals(button)) {
             v = inflater.inflate(R.layout.volume_add, parent, false);
-        } else if (REFRESH.equals(button)) {
-            v = inflater.inflate(R.layout.refresh, parent, false);
         } else if (VOLUME_SUB.equals(button)) {
             v = inflater.inflate(R.layout.volume_sub, parent, false);
         } else if (button.startsWith(KEY)) {

@@ -2871,13 +2871,6 @@ public abstract class PackageManager {
     public static final String FEATURE_BACKUP = "android.software.backup";
 
     /**
-     * Feature for {@link #getSystemAvailableFeatures} and {@link #hasSystemFeature}:
-     * The device can support eink.
-     */
-    @SdkConstant(SdkConstantType.FEATURE)
-    public static final String FEATURE_EINK = "android.software.eink";
-
-    /**
      * Feature for {@link #getSystemAvailableFeatures} and
      * {@link #hasSystemFeature}: The device supports freeform window management.
      * Windows have title bars and can be moved and resized.

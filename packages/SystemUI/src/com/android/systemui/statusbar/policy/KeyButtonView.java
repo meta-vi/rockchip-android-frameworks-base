@@ -62,8 +62,6 @@ import com.android.systemui.bubbles.BubbleController;
 import com.android.systemui.recents.OverviewProxyService;
 import com.android.systemui.shared.system.QuickStepContract;
 import com.android.systemui.statusbar.phone.ButtonInterface;
-import android.content.pm.PackageManager;
-
 
 public class KeyButtonView extends ImageView implements ButtonInterface {
     private static final String TAG = KeyButtonView.class.getSimpleName();
@@ -169,12 +167,11 @@ public class KeyButtonView extends ImageView implements ButtonInterface {
 
         setClickable(true);
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
         mRipple = new KeyButtonRipple(context, this);
         mOverviewProxyService = Dependency.get(OverviewProxyService.class);
         mInputManager = manager;
-        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            setBackground(mRipple);
-        }
+        setBackground(mRipple);
         setWillNotDraw(false);
         forceHasOverlappingRendering(false);
     }
@@ -356,10 +353,8 @@ public class KeyButtonView extends ImageView implements ButtonInterface {
         if (mHasOvalBg) {
             mOvalBgPaint.setColor(keyButtonDrawable.getDrawableBackgroundColor());
         }
-        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            mRipple.setType(keyButtonDrawable.hasOvalBg() ? KeyButtonRipple.Type.OVAL
-                    : KeyButtonRipple.Type.ROUNDED_RECT);
-        }
+        mRipple.setType(keyButtonDrawable.hasOvalBg() ? KeyButtonRipple.Type.OVAL
+                : KeyButtonRipple.Type.ROUNDED_RECT);
     }
 
     public void playSoundEffect(int soundConstant) {
@@ -448,9 +443,7 @@ public class KeyButtonView extends ImageView implements ButtonInterface {
     public void abortCurrentGesture() {
         Log.d("b/63783866", "KeyButtonView.abortCurrentGesture");
         setPressed(false);
-        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            mRipple.abortDelayedRipple();
-        }
+        mRipple.abortDelayedRipple();
         mGestureAborted = true;
     }
 
@@ -465,16 +458,12 @@ public class KeyButtonView extends ImageView implements ButtonInterface {
             // manually.
             invalidate();
         }
-        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            mRipple.setDarkIntensity(darkIntensity);
-        }
+        mRipple.setDarkIntensity(darkIntensity);
     }
 
     @Override
     public void setDelayTouchFeedback(boolean shouldDelay) {
-        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            mRipple.setDelayTouchFeedback(shouldDelay);
-        }
+        mRipple.setDelayTouchFeedback(shouldDelay);
     }
 
     @Override

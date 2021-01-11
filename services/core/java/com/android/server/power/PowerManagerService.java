@@ -117,8 +117,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import android.os.EinkManager;
-
 
 /**
  * The power manager service is responsible for coordinating power management
@@ -232,7 +230,6 @@ public final class PowerManagerService extends SystemService
 
     /** If turning screen on takes more than this long, we show a warning on logcat. */
     private static final int SCREEN_ON_LATENCY_WARNING_MS = 200;
-    private static EinkManager mEinkManager;
 
     /** Constants for {@link #shutdownOrRebootInternal} */
     @Retention(RetentionPolicy.SOURCE)
@@ -1682,18 +1679,12 @@ public final class PowerManagerService extends SystemService
         if (DEBUG_SPEW) {
             Slog.d(TAG, "wakeUpNoUpdateLocked: eventTime=" + eventTime + ", uid=" + reasonUid);
         }
-        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            if(mEinkManager == null){
-                mEinkManager = (EinkManager) mContext.getSystemService(Context.EINK_SERVICE);
-            }
-            if(mEinkManager != null){
-                mEinkManager.quitStandby();
-            }
-            if (eventTime < mLastSleepTime || getWakefulnessLocked() == WAKEFULNESS_AWAKE
-                    || mForceSuspendActive || !mSystemReady) {
-                return false;
-            }
+
+        if (eventTime < mLastSleepTime || getWakefulnessLocked() == WAKEFULNESS_AWAKE
+                || mForceSuspendActive || !mSystemReady) {
+            return false;
         }
+
         Trace.asyncTraceBegin(Trace.TRACE_TAG_POWER, TRACE_SCREEN_ON, 0);
 
         Trace.traceBegin(Trace.TRACE_TAG_POWER, "wakeUp");
@@ -1743,19 +1734,7 @@ public final class PowerManagerService extends SystemService
             Slog.d(TAG, "goToSleepNoUpdateLocked: eventTime=" + eventTime
                     + ", reason=" + reason + ", flags=" + flags + ", uid=" + uid);
         }
-        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            if(mEinkManager == null){
-                mEinkManager = (EinkManager) mContext.getSystemService(Context.EINK_SERVICE);
-            }
-            if(mEinkManager != null){
-                mEinkManager.standby();
-            }
-            try {
-                Thread.sleep(1 * 1000L);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+
         if (eventTime < mLastWakeTime
                 || getWakefulnessLocked() == WAKEFULNESS_ASLEEP
                 || getWakefulnessLocked() == WAKEFULNESS_DOZING

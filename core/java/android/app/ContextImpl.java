@@ -70,9 +70,6 @@ import android.os.RemoteException;
 import android.os.StrictMode;
 import android.os.Trace;
 import android.os.UserHandle;
-//zj add
-import android.os.IEinkManager;
-import android.os.EinkManager;
 import android.os.UserManager;
 import android.os.storage.StorageManager;
 import android.permission.IPermissionManager;

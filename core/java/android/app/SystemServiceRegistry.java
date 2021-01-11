@@ -146,8 +146,6 @@ import android.os.IBinder;
 import android.os.IDumpstate;
 import android.os.IHardwarePropertiesManager;
 import android.os.IPowerManager;
-import android.os.IEinkManager;
-import android.os.EinkManager;
 import android.os.IRecoverySystem;
 import android.os.ISystemUpdateManager;
 import android.os.IThermalService;
@@ -585,24 +583,6 @@ public final class SystemServiceRegistry {
                         ctx.mMainThread.getHandler());
             }});
 
-//zj add b
-        registerService(Context.EINK_SERVICE, EinkManager.class,
-                new CachedServiceFetcher<EinkManager>() {
-            @Override
-            public EinkManager createService(ContextImpl ctx) {
-                IEinkManager service = null;
-                if (ctx.getPackageManager().hasSystemFeature(
-                    PackageManager.FEATURE_EINK)) {
-                        IBinder b = ServiceManager.getService(Context.EINK_SERVICE);
-                        service = IEinkManager.Stub.asInterface(b);
-                        if (service == null) {
-                            Log.wtf(TAG, "Failed to get Eink manager service.");
-                        }
-                }
-                return new EinkManager(ctx.getOuterContext(),
-                        service, ctx.mMainThread.getHandler());
-            }});
-//zj add e
         registerService(Context.RECOVERY_SERVICE, RecoverySystem.class,
                 new CachedServiceFetcher<RecoverySystem>() {
             @Override

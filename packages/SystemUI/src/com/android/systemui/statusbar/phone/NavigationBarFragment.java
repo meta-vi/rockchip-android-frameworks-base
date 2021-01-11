@@ -141,8 +141,7 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 
 import dagger.Lazy;
-import android.os.EinkManager;
-import android.content.pm.PackageManager;
+
 /**
  * Fragment containing the NavigationBarFragment. Contains logic for what happens
  * on clicks and view states of the nav bar.
@@ -232,7 +231,6 @@ public class NavigationBarFragment extends LifecycleFragment implements Callback
     private ViewTreeObserver.OnGlobalLayoutListener mOrientationHandleGlobalLayoutListener;
     private UiEventLogger mUiEventLogger;
     private boolean mShowOrientedHandleForImmersiveMode;
-    private static EinkManager mEinkManager;
     private long mLastClickScreenshotTime = 0;
 
     @com.android.internal.annotations.VisibleForTesting
@@ -434,9 +432,6 @@ public class NavigationBarFragment extends LifecycleFragment implements Callback
         super.onCreate(savedInstanceState);
         mCommandQueue.observe(getLifecycle(), this);
         mWindowManager = getContext().getSystemService(WindowManager.class);
-        if (mEinkManager == null){
-            mEinkManager = (EinkManager)getContext().getSystemService(Context.EINK_SERVICE);
-        }
         mAccessibilityManager = getContext().getSystemService(AccessibilityManager.class);
         mContentResolver = getContext().getContentResolver();
         mContentResolver.registerContentObserver(
@@ -1010,19 +1005,7 @@ public class NavigationBarFragment extends LifecycleFragment implements Callback
 
         ButtonDispatcher backButton = mNavigationBarView.getBackButton();
         backButton.setLongClickable(true);
-        if (getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            ButtonDispatcher refreshButton = mNavigationBarView.getRefreshButton();
-            refreshButton.setLongClickable(true);
-            refreshButton.setOnClickListener(this:: onRefreshClick);
-            refreshButton.setOnTouchListener(this:: onRefreshTouch);
-            refreshButton.setVisibility(View.VISIBLE);
-        } else {
-            ButtonDispatcher refreshButton = mNavigationBarView.getRefreshButton();
-            refreshButton.setLongClickable(true);
-            refreshButton.setOnClickListener(this:: onRefreshClick);
-            refreshButton.setOnTouchListener(this:: onRefreshTouch);
-            refreshButton.setVisibility(View.GONE);
-        }
+
         ButtonDispatcher homeButton = mNavigationBarView.getHomeButton();
         homeButton.setOnTouchListener(this::onHomeTouch);
         homeButton.setOnLongClickListener(this::onHomeLongClick);
@@ -1058,23 +1041,6 @@ public class NavigationBarFragment extends LifecycleFragment implements Callback
             volumeAddButton.setVisibility(View.GONE);
             volumeSubButton.setVisibility(View.GONE);
         }
-    }
-
-    private void onRefreshRepaintEverything(){
-        if (mEinkManager != null) {
-            mEinkManager.sendOneFullFrame();
-        }
-    }
-
-    private boolean onRefreshTouch(View v, MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            onRefreshRepaintEverything();
-        }
-        return false;
-    }
-
-    private void onRefreshClick(View v) {
-            onRefreshRepaintEverything();
     }
 
     private boolean onHomeTouch(View v, MotionEvent event) {

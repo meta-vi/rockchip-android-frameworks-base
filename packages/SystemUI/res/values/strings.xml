@@ -304,8 +304,6 @@
 
     <!-- Content description of the back button for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_back">Back</string>
-
-    <string name="accessibility_refresh">Refresh</string>
     <!-- Content description of the home button for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_home">Home</string>
     <!-- Content description of the menu button for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->

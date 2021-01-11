@@ -1272,12 +1272,6 @@ public class WindowManagerService extends IWindowManager.Stub
 
         final ContentResolver resolver = context.getContentResolver();
         // Get persisted window scale setting
-        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_EINK)) {
-            mWindowAnimationScaleSetting = 0.0f;
-            mTransitionAnimationScaleSetting = 0.0f;
-            mAnimatorDurationScaleSetting = 0.0f;
-            mAnimationsDisabled = true;
-        }
         mWindowAnimationScaleSetting = Settings.Global.getFloat(resolver,
                 Settings.Global.WINDOW_ANIMATION_SCALE, mWindowAnimationScaleSetting);
         mTransitionAnimationScaleSetting = Settings.Global.getFloat(resolver,
