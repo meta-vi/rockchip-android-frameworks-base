@@ -1529,14 +1529,6 @@ class StorageManagerService extends IStorageManager.Stub
                 vol.mountFlags |= VolumeInfo.MOUNT_FLAG_VISIBLE;
             }
 
-            if(("box".equals(SystemProperties.get("ro.target.product","unknown"))
-              ||"atv".equals(SystemProperties.get("ro.target.product","unknown"))
-              ||"tablet".equals(SystemProperties.get("ro.target.product","unknown")))
-              && "true".equals(SystemProperties.get("ro.vendor.udisk.visible"))){
-                Log.d(TAG,"-----for all public volume is visible-----");
-                vol.mountFlags |= VolumeInfo.MOUNT_FLAG_VISIBLE;
-            }
-
             vol.mountUserId = mCurrentUserId;
             mHandler.obtainMessage(H_VOLUME_MOUNT, vol).sendToTarget();
 
@@ -4753,19 +4745,23 @@ class StorageManagerService extends IStorageManager.Stub
             }
         }
 
-        public void onAppOpsChanged(int code, int uid, @Nullable String packageName, int mode) {
+        public void onAppOpsChanged(int code, int uid, @Nullable String packageName, int mode,
+                int previousMode) {
             final long token = Binder.clearCallingIdentity();
             try {
                 if (mIsFuseEnabled) {
                     // When using FUSE, we may need to kill the app if the op changes
                     switch(code) {
                         case OP_REQUEST_INSTALL_PACKAGES:
-                            // Always kill regardless of op change, to remount apps /storage
-
                             if ("com.android.rk".equals(packageName)) {
                                 return;//use break;?
                             }
-                            killAppForOpChange(code, uid);
+                            if (previousMode == MODE_ALLOWED || mode == MODE_ALLOWED) {
+                                // If we transition to/from MODE_ALLOWED, kill the app to make
+                                // sure it has the correct view of /storage. Changing between
+                                // MODE_DEFAULT / MODE_ERRORED is a no-op
+                                killAppForOpChange(code, uid);
+                            }
                             return;
                         case OP_MANAGE_EXTERNAL_STORAGE:
                             if (mode != MODE_ALLOWED) {
