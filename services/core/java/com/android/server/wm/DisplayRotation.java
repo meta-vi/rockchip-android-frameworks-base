@@ -315,6 +315,12 @@ public class DisplayRotation {
         }
         mDemoHdmiRotationLock = SystemProperties.getBoolean("persist.demo.hdmirotationlock", false);
 
+        if("true".equals(SystemProperties.get("ro.vendor.hdmirotationlock"))){
+            Slog.d(TAG,"force set hdmi rotation-----");
+            mDemoHdmiRotation= Surface.ROTATION_0;
+            mDemoHdmiRotationLock=true;
+        }
+
         // For demo purposes, allow the rotation of the remote display to be controlled.
         // By default, remote display locks rotation to landscape.
         if ("portrait".equals(SystemProperties.get("persist.demo.remoterotation"))) {
