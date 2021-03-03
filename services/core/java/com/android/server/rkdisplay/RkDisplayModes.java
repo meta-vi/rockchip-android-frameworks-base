@@ -33,6 +33,7 @@ public class RkDisplayModes {
     private static native int[] nativeGetBcsh(int dpy);
     private static native int[] nativeGetOverscan(int dpy);
     private static native int nativeSetGamma(int dpy, int size, int[] r, int[] g, int[] b);
+    private static native int nativeSet3DLut(int dpy, int size, int[] r, int[] g, int[] b);
     private static native int nativeSetHue(int display, int degree);
     private static native int nativeSetSaturation(int display, int saturation);
     private static native int nativeSetContrast(int display, int contrast);
@@ -701,6 +702,10 @@ public class RkDisplayModes {
 
     public int setGamma(int dpy, int size, int[] red, int[] green, int[] blue) {
         return nativeSetGamma(dpy, size, red, green, blue);
+    }
+
+    public int set3DLut(int dpy, int size, int[] red, int[] green, int[] blue) {
+        return nativeSet3DLut(dpy, size, red, green, blue);
     }
 
     public int setHue(int display, int degree)

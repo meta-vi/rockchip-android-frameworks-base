@@ -727,7 +727,18 @@ public class RkDisplayOutputManager {
         try {
             ret = mService.setGamma(display, size, red, green, blue);
         } catch (Exception e) {
-            Log.e(TAG, "Error set setGamma :" + e);
+            Log.e(TAG, "Error set gamma :" + e);
+            return -1;
+        }
+        return ret;
+    }
+
+    public int set3DLut(int display, int size, int[] red, int[] green, int[] blue){
+        int ret;
+        try {
+            ret = mService.set3DLut(display, size, red, green, blue);
+        } catch (Exception e) {
+            Log.e(TAG, "Error set 3DLut :" + e);
             return -1;
         }
         return ret;
