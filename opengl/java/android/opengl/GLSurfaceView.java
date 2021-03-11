@@ -18,9 +18,11 @@ package android.opengl;
 
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -358,6 +360,9 @@ public class GLSurfaceView extends SurfaceView implements SurfaceHolder.Callback
         }
         mRenderer = renderer;
         mGLThread = new GLThread(mThisWeakRef);
+        if("true".equals(SystemProperties.get("ro.vendor.frameratelock","false"))){
+          mGLThread.setPriority(Thread.MAX_PRIORITY);
+        }
         mGLThread.start();
     }
 
@@ -522,7 +527,12 @@ public class GLSurfaceView extends SurfaceView implements SurfaceHolder.Callback
      * not normally called or subclassed by clients of GLSurfaceView.
      */
     public void surfaceCreated(SurfaceHolder holder) {
-        mGLThread.surfaceCreated();
+       if("true".equals(SystemProperties.get("ro.vendor.frameratelock","false"))){
+         int rate= SystemProperties.getInt("persit.sys.framerate",30);
+         Log.d(TAG,"surface set framrate "+rate);      
+         holder.getSurface().setFrameRate((long)rate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT); 
+       }
+       mGLThread.surfaceCreated();
     }
 
     /**
@@ -1331,7 +1341,6 @@ public class GLSurfaceView extends SurfaceView implements SurfaceHolder.Callback
                                 event = mEventQueue.remove(0);
                                 break;
                             }
-
                             // Update the pause state.
                             boolean pausing = false;
                             if (mPaused != mRequestPaused) {
@@ -1503,7 +1512,6 @@ public class GLSurfaceView extends SurfaceView implements SurfaceHolder.Callback
                         event = null;
                         continue;
                     }
-
                     if (createEglSurface) {
                         if (LOG_SURFACE) {
                             Log.w("GLThread", "egl createSurface");
@@ -1569,6 +1577,7 @@ public class GLSurfaceView extends SurfaceView implements SurfaceHolder.Callback
                         GLSurfaceView view = mGLSurfaceViewWeakRef.get();
                         if (view != null) {
                             try {
+
                                 Trace.traceBegin(Trace.TRACE_TAG_VIEW, "onDrawFrame");
                                 view.mRenderer.onDrawFrame(gl);
                                 if (finishDrawingRunnable != null) {
