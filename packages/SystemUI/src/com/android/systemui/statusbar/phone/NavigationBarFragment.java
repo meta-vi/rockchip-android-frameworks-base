@@ -366,7 +366,7 @@ public class NavigationBarFragment extends LifecycleFragment implements Callback
             // Reset user rotation pref to match that of the WindowManager if starting in locked
             // mode. This will automatically happen when switching from auto-rotate to locked mode.
             if (display != null && rotationButtonController.isRotationLocked()) {
-                rotationButtonController.setRotationLockedAtAngle(display.getRotation());
+                //rotationButtonController.setRotationLockedAtAngle(display.getRotation());
             }
         } else {
             mDisabledFlags2 |= StatusBarManager.DISABLE2_ROTATE_SUGGESTIONS;
