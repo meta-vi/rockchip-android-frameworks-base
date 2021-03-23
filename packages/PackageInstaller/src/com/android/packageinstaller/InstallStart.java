@@ -107,6 +107,9 @@ public class InstallStart extends Activity {
         if (null == callingPackage && null != intent.getDataString()
                 && intent.getDataString().startsWith("content://com.android.rk.")) {
             callingPackage = "com.android.rk";
+        } else if(null == callingPackage && null != intent.getDataString()
+                && intent.getDataString().startsWith("content://com.rockchips.mediacenter.")) {
+            callingPackage = "com.rockchips.mediacenter";
         } else if(callingPackage == null) {
             callingPackage = intent.getStringExtra(PackageInstallerActivity.EXTRA_CALLING_PACKAGE);
         }
