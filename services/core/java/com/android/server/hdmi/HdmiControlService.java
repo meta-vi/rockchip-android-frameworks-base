@@ -2055,18 +2055,6 @@ public class HdmiControlService extends SystemService {
         }
 
         @Override
-        public void sendStandbyTv(){
-            enforceAccessPermission();
-            runOnServiceThread(new Runnable() {
-                @Override
-                public void run() {
-                    HdmiControlService.this.sendStandbyTv();
-                }
-            });
-        }
-
-
-        @Override
         protected void dump(FileDescriptor fd, final PrintWriter writer, String[] args) {
             if (!DumpUtils.checkDumpPermission(getContext(), TAG, writer)) return;
             final IndentingPrintWriter pw = new IndentingPrintWriter(writer, "  ");
@@ -2095,12 +2083,6 @@ public class HdmiControlService extends SystemService {
                 pw.decreaseIndent();
             }
         }
-    }
-
-    void sendStandbyTv() {
-        HdmiCecLocalDevice device = mCecController.getLocalDevice(HdmiDeviceInfo.DEVICE_PLAYBACK);
-        if(device != null)
-            sendCecCommand(HdmiCecMessageBuilder.buildStandby(device.getDeviceInfo().getLogicalAddress(), Constants.ADDR_TV));
     }
 
     // Get the source address to send out commands to devices connected to the current device

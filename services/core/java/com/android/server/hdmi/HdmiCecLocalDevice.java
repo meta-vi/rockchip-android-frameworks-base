@@ -25,7 +25,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.os.SystemProperties;
 import android.util.Slog;
 import android.view.InputDevice;
 import android.view.KeyCharacterMap;
@@ -514,14 +513,11 @@ abstract class HdmiCecLocalDevice {
     protected boolean handleStandby(HdmiCecMessage message) {
         assertRunOnServiceThread();
         // Seq #12
-        String isStandby = SystemProperties.get("persist.sys.cecstanbyen", "1");
-        if(isStandby.equals("1")){
-            if (mService.isControlEnabled()
-                    && !mService.isProhibitMode()
-                    && mService.isPowerOnOrTransient()) {
-                mService.standby();
-                return true;
-            }
+        if (mService.isControlEnabled()
+                && !mService.isProhibitMode()
+                && mService.isPowerOnOrTransient()) {
+            mService.standby();
+            return true;
         }
         return false;
     }
