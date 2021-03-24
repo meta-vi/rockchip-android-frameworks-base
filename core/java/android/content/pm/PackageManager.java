@@ -8242,4 +8242,14 @@ public abstract class PackageManager {
     public static void uncorkPackageInfoCache() {
         PropertyInvalidatedCache.uncorkInvalidations(PermissionManager.CACHE_KEY_PACKAGE_INFO);
     }
+
+    /**
+     * @hide
+     */
+    public abstract void setPackageUiModeType(String packageName, int oldUiMode, int newUiMode);
+
+    /**
+     * @hide
+     */
+    public abstract int getPackageUiModeType(String packageName);
 }

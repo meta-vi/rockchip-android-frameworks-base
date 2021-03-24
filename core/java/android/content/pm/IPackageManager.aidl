@@ -789,4 +789,9 @@ interface IPackageManager {
     boolean isAutoRevokeWhitelisted(String packageName);
 
     void grantImplicitAccess(int queryingUid, String visibleAuthority);
+
+    //For UiMode
+    void setPackageUiModeType(String packageName, int oldUiMode, int newUiMode);
+
+    int getPackageUiModeType(String packageName);
 }
