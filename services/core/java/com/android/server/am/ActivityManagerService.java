@@ -1493,6 +1493,7 @@ public class ActivityManagerService extends IActivityManager.Stub
     final ArrayList<String> mExcludePrevApp = new ArrayList<String>();   //process which would not stop when go to pause
     final ArrayList<String> mExcludeNextApp = new ArrayList<String>();   //process which would not pause prev app when starting
     final ArrayList<String> mExcludeEmptyApp = new ArrayList<String>();   //process which would not being killed when empty
+    final ArrayList<String> mWhitelistPackage = new ArrayList<String>();  // whitelist package which would not being killed
 
     private final class AppDeathRecipient implements IBinder.DeathRecipient {
         final ProcessRecord mApp;
@@ -5418,6 +5419,7 @@ public class ActivityManagerService extends IActivityManager.Stub
         if (callFinishBooting) {
             finishBooting();
         }
+        getWhitelistPackage();
     }
 
     final void ensureBootCompleted() {
@@ -19178,6 +19180,46 @@ public class ActivityManagerService extends IActivityManager.Stub
                 Slog.w(TAG, "Unable to create pipe", e);
                 return null;
             }
+        }
+    }
+
+    final void getWhitelistPackage() {
+        File whiteListPackageFile = new File("dtoverlay/oom_whitelist_package.xml");
+        if (whiteListPackageFile.exists()) {
+            Slog.d(TAG, "getWhitelistPackage: whiteListPackageFile found");
+            try {
+                FileInputStream fis = new FileInputStream(whiteListPackageFile);
+                XmlPullParser xmlParser = Xml.newPullParser();
+                xmlParser.setInput(fis, null);
+
+                int xmlType;
+                do {
+                    xmlType = xmlParser.next();
+                    if (xmlType == XmlPullParser.START_TAG) {
+                        String xmlTag = xmlParser.getName();
+                        if ("whitelist".equals(xmlTag)) {
+                            String packageName = xmlParser.getAttributeValue(null, "package");
+                            Slog.d(TAG, "getWhitelistPackage: xml packageName: " + packageName);
+                            if (packageName != null) {
+                                mWhitelistPackage.add(packageName);
+                                Slog.d(TAG, "getWhitelistPackage: mWhitelistPackage.add: " + packageName);
+                            }
+                        }
+                    }
+                } while (xmlType != XmlPullParser.END_DOCUMENT);
+            } catch (NullPointerException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (NumberFormatException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (XmlPullParserException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (IOException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (IndexOutOfBoundsException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            }
+        } else {
+            Slog.d(TAG, "getWhitelistPackage: whiteListPackageFile not found");
         }
     }
 }
