@@ -574,8 +574,38 @@ final class LocalDisplayAdapter extends DisplayAdapter {
                     mInfo.type = Display.TYPE_EXTERNAL;
                     mInfo.touch = DisplayDeviceInfo.TOUCH_EXTERNAL;
                     mInfo.flags |= DisplayDeviceInfo.FLAG_PRESENTATION;
+                    if (SystemProperties.getBoolean("persist.demo.hdmirotates", false)) {
+                        mInfo.flags |= DisplayDeviceInfo.FLAG_ROTATES_WITH_CONTENT;
+                    }
                     mInfo.name = getContext().getResources().getString(
                             com.android.internal.R.string.display_manager_hdmi_display_name);
+
+                    if(SystemProperties.get("ro.board.platform").equals("rk356x")) {
+                        if (mPhysicalDisplayId == 1) {
+                            String rotation = SystemProperties.get("persist.sys.rotation.einit-1", "0");
+                            Slog.d(TAG,"mPhysicalDisplayId 1,set rotation "+rotation);
+                                SurfaceControl.DisplayConfig config_external = mDisplayConfigs[mActiveConfigId];
+                                //mInfo.width = config_external.height;
+                                //mInfo.height = config_external.width;
+                                mInfo.rotation = Integer.valueOf(rotation);
+                        } else if (mPhysicalDisplayId == 2) {
+                            String rotation = SystemProperties.get("persist.sys.rotation.einit-2", "0");
+                            Slog.d(TAG,"mPhysicalDisplayId 2,set rotation "+rotation);
+                                SurfaceControl.DisplayConfig config_external = mDisplayConfigs[mActiveConfigId];
+                                //mInfo.width = config_external.height;
+                                //mInfo.height = config_external.width;
+                                mInfo.rotation = Integer.valueOf(rotation);
+
+                        }
+                    }else{
+                        String rotation = SystemProperties.get("persist.sys.rotation.einit", "0");
+                            SurfaceControl.DisplayConfig config_external = mDisplayConfigs[mActiveConfigId];
+                            //mInfo.width = config_external.height;
+                            //mInfo.height = config_external.width;
+                            mInfo.rotation = Integer.valueOf(rotation);
+                    }
+
+
                 }
                 // The display is trusted since it is created by system.
                 mInfo.flags |= DisplayDeviceInfo.FLAG_TRUSTED;

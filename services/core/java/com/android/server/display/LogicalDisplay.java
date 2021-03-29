@@ -24,13 +24,15 @@ import android.view.DisplayInfo;
 import android.view.Surface;
 import android.view.SurfaceControl;
 
+import com.android.internal.inputmethod.CancellationGroup;
 import com.android.server.wm.utils.InsetUtils;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-
+import android.util.Slog;
+import android.os.SystemProperties;
 /**
  * Describes how a logical display is configured.
  * <p>
@@ -314,6 +316,34 @@ final class LogicalDisplay {
             mBaseDisplayInfo.displayCutout = maskCutout ? null : deviceInfo.displayCutout;
             mBaseDisplayInfo.displayId = mDisplayId;
 
+            if(SystemProperties.get("ro.board.platform").equals("rk356x")) {
+                int mPhysicalDisplayId = Integer.valueOf(deviceInfo.uniqueId.split(":")[1]);
+                if (mPhysicalDisplayId == 1) {
+                    if (SystemProperties.getInt("persist.sys.rotation.einit-1", 0)%2!=0) {
+                        mBaseDisplayInfo.appWidth = deviceInfo.height;
+                        mBaseDisplayInfo.appHeight = deviceInfo.width;
+                        mBaseDisplayInfo.logicalWidth = deviceInfo.height;
+                        mBaseDisplayInfo.logicalHeight = deviceInfo.width;
+                    }
+                } else if (mPhysicalDisplayId == 2) {
+                    if (SystemProperties.getInt("persist.sys.rotation.einit-2", 0)%2!=0) {
+                        mBaseDisplayInfo.appWidth = deviceInfo.height;
+                        mBaseDisplayInfo.appHeight = deviceInfo.width;
+                        mBaseDisplayInfo.logicalWidth = deviceInfo.height;
+                        mBaseDisplayInfo.logicalHeight = deviceInfo.width;
+                    }
+                }
+            }else{
+                if(deviceInfo.type==Display.TYPE_EXTERNAL) {
+                    if (SystemProperties.getInt("persist.sys.rotation.einit", 0) % 2 != 0) {
+                        mBaseDisplayInfo.appWidth = deviceInfo.height;
+                        mBaseDisplayInfo.appHeight = deviceInfo.width;
+                        mBaseDisplayInfo.logicalWidth = deviceInfo.height;
+                        mBaseDisplayInfo.logicalHeight = deviceInfo.width;
+                    }
+                }
+            }
+
             mPrimaryDisplayDeviceInfo = deviceInfo;
             mInfo.set(null);
         }
@@ -465,6 +495,33 @@ final class LogicalDisplay {
             mTempDisplayRect.offset(-mDisplayOffsetY, mDisplayOffsetX);
         }
 
+        if(SystemProperties.get("ro.board.platform").equals("rk356x")) {
+            int mPhysicalDisplayId = Integer.valueOf(device.getDisplayDeviceInfoLocked().uniqueId.split(":")[1]);
+            if (mPhysicalDisplayId == 1) {
+                if (SystemProperties.getBoolean("persist.sys.rotation.efull-1", false)) {
+                    mTempDisplayRect.top = 0;
+                    mTempDisplayRect.left = 0;
+                    mTempDisplayRect.right = physWidth;
+                    mTempDisplayRect.bottom = physHeight;
+                }
+            } else if (mPhysicalDisplayId == 2) {
+                if (SystemProperties.getBoolean("persist.sys.rotation.efull-2", false)) {
+                    mTempDisplayRect.top = 0;
+                    mTempDisplayRect.left = 0;
+                    mTempDisplayRect.right = physWidth;
+                    mTempDisplayRect.bottom = physHeight;
+                }
+            }
+        }else{
+            if(device.getDisplayDeviceInfoLocked().type==Display.TYPE_EXTERNAL) {
+                if (SystemProperties.getBoolean("persist.sys.rotation.efull", false)) {
+                    mTempDisplayRect.top = 0;
+                    mTempDisplayRect.left = 0;
+                    mTempDisplayRect.right = physWidth;
+                    mTempDisplayRect.bottom = physHeight;
+                }
+            }
+        }
         mDisplayPosition.set(mTempDisplayRect.left, mTempDisplayRect.top);
         device.setProjectionLocked(t, orientation, mTempLayerStackRect, mTempDisplayRect);
     }
