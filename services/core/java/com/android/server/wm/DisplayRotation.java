@@ -317,7 +317,9 @@ public class DisplayRotation {
 
         if("true".equals(SystemProperties.get("ro.vendor.hdmirotationlock"))){
             Slog.d(TAG,"force set hdmi rotation-----");
-            mDemoHdmiRotation= Surface.ROTATION_0;
+            int rotation=Integer.valueOf(SystemProperties.get("ro.surface_flinger.primary_display_orientation","ORIENTATION_0").split("_")[1])/90;
+            mDemoHdmiRotation=(4-rotation)%4;
+            //mDemoHdmiRotation= Surface.ROTATION_0;
             mDemoHdmiRotationLock=true;
         }
 
