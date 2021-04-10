@@ -51,7 +51,7 @@ public interface PackageAbiHelper {
      * If {@code extractLibs} is true, native libraries are extracted from the app if required.
      */
     Pair<Abis, NativeLibraryPaths> derivePackageAbi(AndroidPackage pkg, boolean isUpdatedSystemApp,
-            String cpuAbiOverride, boolean extractLibs) throws PackageManagerException;
+            String cpuAbiOverride, boolean extractLibs, String forcePrimaryCpuAbi) throws PackageManagerException;
 
     /**
      * Calculates adjusted ABIs for a set of packages belonging to a shared user so that they all

@@ -11625,6 +11625,22 @@ public class PackageManagerService extends IPackageManager.Stub
 
         final String cpuAbiOverride = deriveAbiOverride(request.cpuAbiOverride, pkgSetting);
 
+        String forcePrimaryCpuAbi = "";
+        final File codeFile = new File(parsedPackage.getCodePath());
+        if ((!isApkFile(codeFile))
+            && ((scanFlags & SCAN_AS_PREBUNDLED_DIR) != 0
+                || (scanFlags & SCAN_AS_PREINSTALL) != 0)) {
+            File libDir64 = new File(codeFile, "lib/arm64");
+            if (null != libDir64 && libDir64.exists()) {
+                Slog.v(TAG, " libDir64=" + libDir64 + ", "+libDir64.getAbsolutePath());
+                forcePrimaryCpuAbi = "arm64-v8a";
+            } else {
+                forcePrimaryCpuAbi = "armeabi-v7a";
+            }
+            parsedPackage.setPrimaryCpuAbi(forcePrimaryCpuAbi);
+            Slog.w(TAG, parsedPackage.getPrimaryCpuAbi() + " prebundled install " + parsedPackage.getCodePath());
+        }
+
         if ((scanFlags & SCAN_NEW_INSTALL) == 0) {
             if (needToDeriveAbi && (scanFlags & SCAN_AS_PREBUNDLED_DIR) == 0) {
                 Trace.traceBegin(TRACE_TAG_PACKAGE_MANAGER, "derivePackageAbi");
@@ -11632,7 +11648,7 @@ public class PackageManagerService extends IPackageManager.Stub
                 final Pair<PackageAbiHelper.Abis, PackageAbiHelper.NativeLibraryPaths> derivedAbi =
                         packageAbiHelper.derivePackageAbi(parsedPackage,
                                 pkgSetting.getPkgState().isUpdatedSystemApp(), cpuAbiOverride,
-                                extractNativeLibs);
+                                extractNativeLibs, forcePrimaryCpuAbi);
                 derivedAbi.first.applyTo(parsedPackage);
                 derivedAbi.second.applyTo(parsedPackage);
                 Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
@@ -11659,6 +11675,9 @@ public class PackageManagerService extends IPackageManager.Stub
                 // package setting.
                 parsedPackage.setPrimaryCpuAbi(primaryCpuAbiFromSettings)
                         .setSecondaryCpuAbi(secondaryCpuAbiFromSettings);
+                if (!"".equals(forcePrimaryCpuAbi)) {
+                    parsedPackage.setPrimaryCpuAbi(forcePrimaryCpuAbi);
+                }
 
                 final PackageAbiHelper.NativeLibraryPaths nativeLibraryPaths =
                         packageAbiHelper.getNativeLibraryPaths(parsedPackage,
@@ -11680,6 +11699,10 @@ public class PackageManagerService extends IPackageManager.Stub
                 // use that and derive the native library path based on the new codepath.
                 parsedPackage.setPrimaryCpuAbi(pkgSetting.primaryCpuAbiString)
                         .setSecondaryCpuAbi(pkgSetting.secondaryCpuAbiString);
+            }
+
+            if (!"".equals(forcePrimaryCpuAbi)) {
+                parsedPackage.setPrimaryCpuAbi(forcePrimaryCpuAbi);
             }
 
             // Set native library paths again. For moves, the path will be updated based on the
@@ -17636,7 +17659,7 @@ public class PackageManagerService extends IPackageManager.Stub
                 final Pair<PackageAbiHelper.Abis, PackageAbiHelper.NativeLibraryPaths>
                         derivedAbi = mInjector.getAbiHelper().derivePackageAbi(parsedPackage,
                         isUpdatedSystemAppFromExistingSetting || isUpdatedSystemAppInferred,
-                        abiOverride, extractNativeLibs);
+                        abiOverride, extractNativeLibs, null);
                 derivedAbi.first.applyTo(parsedPackage);
                 derivedAbi.second.applyTo(parsedPackage);
             } catch (PackageManagerException pme) {
