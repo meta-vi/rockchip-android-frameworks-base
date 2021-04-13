@@ -317,6 +317,7 @@ final class LogicalDisplay {
             mBaseDisplayInfo.displayId = mDisplayId;
 
             if(SystemProperties.get("ro.board.platform").equals("rk356x")) {
+                if(deviceInfo.type==Display.TYPE_EXTERNAL) {
                 int mPhysicalDisplayId = Integer.valueOf(deviceInfo.uniqueId.split(":")[1]);
                 if (mPhysicalDisplayId == 1) {
                     if (SystemProperties.getInt("persist.sys.rotation.einit-1", 0)%2!=0) {
@@ -332,6 +333,7 @@ final class LogicalDisplay {
                         mBaseDisplayInfo.logicalWidth = deviceInfo.height;
                         mBaseDisplayInfo.logicalHeight = deviceInfo.width;
                     }
+                }
                 }
             }else{
                 if(deviceInfo.type==Display.TYPE_EXTERNAL) {
@@ -496,6 +498,7 @@ final class LogicalDisplay {
         }
 
         if(SystemProperties.get("ro.board.platform").equals("rk356x")) {
+            if(displayDeviceInfo.type==Display.TYPE_EXTERNAL) {
             int mPhysicalDisplayId = Integer.valueOf(device.getDisplayDeviceInfoLocked().uniqueId.split(":")[1]);
             if (mPhysicalDisplayId == 1) {
                 if (SystemProperties.getBoolean("persist.sys.rotation.efull-1", false)) {
@@ -511,7 +514,7 @@ final class LogicalDisplay {
                     mTempDisplayRect.right = physWidth;
                     mTempDisplayRect.bottom = physHeight;
                 }
-            }
+            }}
         }else{
             if(device.getDisplayDeviceInfoLocked().type==Display.TYPE_EXTERNAL) {
                 if (SystemProperties.getBoolean("persist.sys.rotation.efull", false)) {
