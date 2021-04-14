@@ -232,7 +232,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
+import android.os.SystemProperties;
 /**
  * Utility class for keeping track of the WindowStates and other pertinent contents of a
  * particular Display.
@@ -4010,6 +4010,33 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
         mInsetsStateController.getImeSourceProvider().checkShowImePostLayout();
 
         mLastHasContent = mTmpApplySurfaceChangesTransactionState.displayHasContent;
+        if (SystemProperties.getBoolean("vendor.hwc.enable_display_configs", false)){
+           if (SystemProperties.get("ro.board.platform").equals("rk356x")) {
+              if (mDisplayInfo.type == Display.TYPE_INTERNAL) {
+                 int modeId = SystemProperties.getInt("sys.display-0.mode", 0);
+                 mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+              } else if(mDisplayInfo.type==Display.TYPE_EXTERNAL){
+                 int mPhysicalDisplayId = Integer.valueOf(mDisplayInfo.uniqueId.split(":")[1]);
+                 if (mPhysicalDisplayId==1){
+                     int modeId = SystemProperties.getInt("sys.display-1.mode", 0);
+                     mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+                 }
+                 if (mPhysicalDisplayId==2){
+                     int modeId = SystemProperties.getInt("sys.display-2.mode", 0);
+                     mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+                 }
+             }
+          }else {
+             if (mDisplayInfo.type == Display.TYPE_INTERNAL) {
+                 int modeId = SystemProperties.getInt("sys.display-0.mode", 0);
+                 mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+             } else if(mDisplayInfo.type==Display.TYPE_EXTERNAL){
+                 int modeId = SystemProperties.getInt("sys.display-1.mode", 0);
+                 mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+             }
+          }
+        }
+
         mWmService.mDisplayManagerInternal.setDisplayProperties(mDisplayId,
                 mLastHasContent,
                 mTmpApplySurfaceChangesTransactionState.preferredRefreshRate,
