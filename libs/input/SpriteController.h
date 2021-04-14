@@ -124,6 +124,9 @@ public:
 
     /* Sets the id of the display where the sprite should be shown. */
     virtual void setDisplayId(int32_t displayId) = 0;
+
+    virtual int32_t getDisplayId() = 0;
+    
 };
 
 /*
@@ -228,6 +231,8 @@ private:
         virtual void setAlpha(float alpha);
         virtual void setTransformationMatrix(const SpriteTransformationMatrix& matrix);
         virtual void setDisplayId(int32_t displayId);
+
+        virtual int32_t getDisplayId();
 
         inline const SpriteState& getStateLocked() const {
             return mLocked.state;

@@ -242,6 +242,7 @@ public:
             jfloatArray matrixArr);
     virtual TouchAffineTransformation getTouchAffineTransformation(
             const std::string& inputDeviceDescriptor, int32_t surfaceRotation);
+    virtual int32_t notifyDisplayIdChanged();
 
     /* --- InputDispatcherPolicyInterface implementation --- */
 
@@ -958,6 +959,40 @@ TouchAffineTransformation NativeInputManager::getTouchAffineTransformation(
     env->DeleteLocalRef(cal);
 
     return transform;
+}
+
+int32_t NativeInputManager::notifyDisplayIdChanged() REQUIRES(mLock) {
+    sp<PointerController> controller = mLocked.pointerController.promote();
+    int32_t mDisplayId=controller->getDisplayId();
+    uint8_t physicalPortSize=0;
+    DisplayViewport mViewport=controller->getViewportLocked();
+    uint8_t mPhysicalPort=mViewport.physicalPort.value();
+    ALOGV("all viewports size=%d current viewport=%s ",(int32_t)mLocked.viewports.size(),mViewport.toString().c_str());
+    for (const DisplayViewport& v : mLocked.viewports) {
+        if (v.physicalPort!=std::nullopt) {
+           physicalPortSize++;
+        }
+    }
+    ALOGV("physical port size=%d",physicalPortSize);
+    if(physicalPortSize==1){
+       ALOGV("physicalPort size =1,return display id %d",mDisplayId);
+       return mDisplayId;
+    }
+    for (const DisplayViewport& v : mLocked.viewports) {
+       ALOGV("viewport=%s",v.toString().c_str());
+       if (v.physicalPort==std::nullopt || v.physicalPort.value()==mPhysicalPort || mViewport.displayId==v.displayId){
+            ALOGV("continue-----");
+            continue;
+       }
+       if(physicalPortSize==2||v.physicalPort.value()==(mViewport.physicalPort.value()+1)%physicalPortSize){
+            ALOGV("next viewport=%s",v.toString().c_str());
+            controller->setDisplayId(v.displayId);
+            controller->setDisplayViewport(v);
+            mDisplayId=v.displayId;
+            break ;
+       }
+    }
+    return mDisplayId; 
 }
 
 bool NativeInputManager::filterInputEvent(const InputEvent* inputEvent, uint32_t policyFlags) {
