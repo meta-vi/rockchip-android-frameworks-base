@@ -59,6 +59,9 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
+import java.io.OutputStream;
+import java.io.InputStream;
+
 /**
  * Performs a number of miscellaneous, non-system-critical actions
  * after the system has finished booting.
@@ -117,12 +120,50 @@ public class BootReceiver extends BroadcastReceiver {
     private static final String METRIC_SYSTEM_SERVER = "shutdown_system_server";
     private static final String METRIC_SHUTDOWN_TIME_START = "begin_shutdown";
 
+	public void copyFile(File source, File dest) throws IOException {
+		InputStream is = null;
+		OutputStream os = null;
+
+		try {
+			is = new FileInputStream(source);
+			os = new FileOutputStream(dest, false);
+			byte[] buffer = new byte[1024];
+			int length;
+
+			while ((length = is.read(buffer)) > 0) {
+				os.write(buffer, 0, length);
+			}
+		} finally {
+				if (is != null) is.close();
+				if (os != null) os.close();
+		}
+	}
+
     @Override
     public void onReceive(final Context context, Intent intent) {
         // Log boot events in the background to avoid blocking the main thread with I/O
         new Thread() {
             @Override
             public void run() {
+		final String bootLogoPath = "/data/media/0/boot_logo.bmp";
+		final String bootLogoDonePath = "/data/media/0/boot_logo_done.bmp";
+		final String splashPartition = "/dev/block/by-name/splash";
+
+		File f = new File(bootLogoPath);
+		if ( f.exists() && !f.isDirectory()) {
+			File dest = new File(splashPartition);
+			File new_name= new  File(bootLogoDonePath);
+
+			Slog.i(TAG, "onReceive: " + bootLogoPath + " exist");
+
+			try {
+				copyFile(f, dest);
+				f.renameTo(new_name);
+			}  catch ( IOException e) {
+				Slog.e(TAG, "onReceive: copy to dest fail ", e);
+			}
+		}
+
                 try {
                     logBootEvents(context);
                 } catch (Exception e) {
