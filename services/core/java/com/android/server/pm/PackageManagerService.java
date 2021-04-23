@@ -3134,6 +3134,8 @@ public class PackageManagerService extends IPackageManager.Stub
                         packageParser, executorService);
             }
 
+            preinstallThirdPartyAPK(packageParser,executorService,scanFlags);
+
             // Parse overlay configuration files to set default enable state, mutability, and
             // priority of system overlays.
             mOverlayConfig = OverlayConfig.initializeSystemInstance(
@@ -3248,8 +3250,6 @@ public class PackageManagerService extends IPackageManager.Stub
                         packageParser, executorService);
 
             }
-
-            preinstallThirdPartyAPK(packageParser,executorService,scanFlags);
 
             packageParser.close();
 
