@@ -470,7 +470,7 @@ public class RkDisplayModes {
         builder.append(info.htotal);
         builder.append("-");
         builder.append(info.vsync_start)
-        .append("-").append(info.vsync_end).append("-").append(info.vtotal).append("-").append(String.format("%x", info.flags));
+        .append("-").append(info.vsync_end).append("-").append(info.vtotal).append("-").append(String.format("%x", info.flags)).append("-").append(info.clock);
 
         nativeSetMode(display, ifaceType, builder.toString());
     }
@@ -502,7 +502,7 @@ public class RkDisplayModes {
             String[] resos = mode_str[0].split("x");
             String[] h_vfresh = resos[1].split("@");
 
-            if (mode_str.length != 8 || resos.length != 2 || h_vfresh.length != 2) {
+            if (mode_str.length != 9 || resos.length != 2 || h_vfresh.length != 2) {
                 for (String mval: mode_str) {
                     Log.e(TAG, "getCurMode split -:  " + mval);
                 }
