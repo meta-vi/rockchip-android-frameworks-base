@@ -36,6 +36,7 @@ import android.os.storage.StorageEventListener;
 import android.os.storage.StorageManager;
 import android.os.storage.VolumeInfo;
 import android.os.storage.VolumeRecord;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -233,7 +234,8 @@ public class StorageNotification extends SystemUI {
     }
 
     private void onDiskScannedInternal(DiskInfo disk, int volumeCount) {
-        if (volumeCount == 0 && disk.size > 0) {
+        if (volumeCount == 0 && disk.size > 0 &&
+                (!disk.isSd() && !"sd".equals(SystemProperties.get("ro.boot.storagemedia", "")))) {
             // No supported volumes found, give user option to format
             final CharSequence title = mContext.getString(
                     R.string.ext_media_unsupported_notification_title, disk.getDescription());
