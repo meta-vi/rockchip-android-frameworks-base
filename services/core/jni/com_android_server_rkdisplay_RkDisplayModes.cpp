@@ -380,6 +380,42 @@ static jint nativeSetGamma(JNIEnv* env, jobject obj,
     return 0;
 }
 
+static jint nativeSet3DLut(JNIEnv* env, jobject obj,
+        jint dpy, jint size, jintArray r, jintArray g, jintArray b){
+
+    std::vector<uint16_t> hidlRed;
+    std::vector<uint16_t> hidlGreen;
+    std::vector<uint16_t> hidlBlue;
+    jsize jrsize = env->GetArrayLength(r);
+    jsize jgsize = env->GetArrayLength(g);
+    jsize jbsize = env->GetArrayLength(b);
+
+    jint* jr_data = env->GetIntArrayElements(r, /* isCopy */ NULL);
+    jint* jg_data = env->GetIntArrayElements(g, /* isCopy */ NULL);
+    jint* jb_data = env->GetIntArrayElements(b, /* isCopy */ NULL);
+
+    for (int i=0;i<jrsize;i++) {
+        hidlRed.push_back((uint16_t)jr_data[i]);
+    }
+    for (int i=0;i<jgsize;i++) {
+        hidlGreen.push_back((uint16_t)jg_data[i]);
+    }
+    for (int i=0;i<jbsize;i++) {
+        hidlBlue.push_back((uint16_t)jb_data[i]);
+    }
+
+    if (mComposer != nullptr)
+    {
+        mComposer->set3DLut(dpy, size, hidlRed, hidlGreen, hidlBlue);
+    }
+
+    env->ReleaseIntArrayElements(r, jr_data, 0);
+    env->ReleaseIntArrayElements(g, jg_data, 0);
+    env->ReleaseIntArrayElements(b, jb_data, 0);
+
+    return 0;
+}
+
 static jobjectArray nativeGetDisplayConfigs(JNIEnv* env, jclass clazz,
         jint dpy) {
     hidl_vec<RkDrmMode> mModes;
@@ -480,6 +516,8 @@ static const JNINativeMethod sRkDrmModeMethods[] = {
         (void*)nativeGetOverscan},
     {"nativeSetGamma", "(II[I[I[I)I",
         (void*)nativeSetGamma},
+    {"nativeSet3DLut", "(II[I[I[I)I",
+        (void*)nativeSet3DLut},
     {"nativeSetHue", "(II)I",
         (void*)nativeSetHue},
     {"nativeSetSaturation", "(II)I",

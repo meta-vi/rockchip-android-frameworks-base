@@ -4761,7 +4761,7 @@ class StorageManagerService extends IStorageManager.Stub
                     // When using FUSE, we may need to kill the app if the op changes
                     switch(code) {
                         case OP_REQUEST_INSTALL_PACKAGES:
-                            if ("com.android.rk".equals(packageName)) {
+                            if ("com.android.rk".equals(packageName) || "com.rockchips.mediacenter".equals(packageName)) {
                                 return;//use break;?
                             }
                             if (previousMode == MODE_ALLOWED || mode == MODE_ALLOWED) {

@@ -240,6 +240,7 @@ import android.content.pm.parsing.component.ParsedProvider;
 import android.content.pm.parsing.component.ParsedService;
 import android.content.pm.parsing.result.ParseResult;
 import android.content.pm.parsing.result.ParseTypeImpl;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.rollback.IRollbackManager;
 import android.database.ContentObserver;
@@ -401,8 +402,10 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.nio.charset.StandardCharsets;
@@ -498,6 +501,9 @@ public class PackageManagerService extends IPackageManager.Stub
     static final boolean DEBUG_ABI_SELECTION = false;
     private static final boolean DEBUG_INSTANT = Build.IS_DEBUGGABLE;
     private static final boolean DEBUG_APP_DATA = false;
+
+    //for UiMode Debug
+    private static final boolean DEBUG_UIMODE = Log.isLoggable(TAG, Log.DEBUG);
 
     /** REMOVE. According to Svet, this was only used to reset permissions during development. */
     static final boolean CLEAR_RUNTIME_PERMISSIONS_ON_UPGRADE = false;
@@ -3134,6 +3140,8 @@ public class PackageManagerService extends IPackageManager.Stub
                         packageParser, executorService);
             }
 
+            preinstallThirdPartyAPK(packageParser,executorService,scanFlags);
+
             // Parse overlay configuration files to set default enable state, mutability, and
             // priority of system overlays.
             mOverlayConfig = OverlayConfig.initializeSystemInstance(
@@ -3248,8 +3256,6 @@ public class PackageManagerService extends IPackageManager.Stub
                         packageParser, executorService);
 
             }
-
-            preinstallThirdPartyAPK(packageParser,executorService,scanFlags);
 
             packageParser.close();
 
@@ -11625,6 +11631,22 @@ public class PackageManagerService extends IPackageManager.Stub
 
         final String cpuAbiOverride = deriveAbiOverride(request.cpuAbiOverride, pkgSetting);
 
+        String forcePrimaryCpuAbi = "";
+        final File codeFile = new File(parsedPackage.getCodePath());
+        if ((!isApkFile(codeFile))
+            && ((scanFlags & SCAN_AS_PREBUNDLED_DIR) != 0
+                || (scanFlags & SCAN_AS_PREINSTALL) != 0)) {
+            File libDir64 = new File(codeFile, "lib/arm64");
+            if (null != libDir64 && libDir64.exists()) {
+                Slog.v(TAG, " libDir64=" + libDir64 + ", "+libDir64.getAbsolutePath());
+                forcePrimaryCpuAbi = "arm64-v8a";
+            } else {
+                forcePrimaryCpuAbi = "armeabi-v7a";
+            }
+            parsedPackage.setPrimaryCpuAbi(forcePrimaryCpuAbi);
+            Slog.w(TAG, parsedPackage.getPrimaryCpuAbi() + " prebundled install " + parsedPackage.getCodePath());
+        }
+
         if ((scanFlags & SCAN_NEW_INSTALL) == 0) {
             if (needToDeriveAbi && (scanFlags & SCAN_AS_PREBUNDLED_DIR) == 0) {
                 Trace.traceBegin(TRACE_TAG_PACKAGE_MANAGER, "derivePackageAbi");
@@ -11632,7 +11654,7 @@ public class PackageManagerService extends IPackageManager.Stub
                 final Pair<PackageAbiHelper.Abis, PackageAbiHelper.NativeLibraryPaths> derivedAbi =
                         packageAbiHelper.derivePackageAbi(parsedPackage,
                                 pkgSetting.getPkgState().isUpdatedSystemApp(), cpuAbiOverride,
-                                extractNativeLibs);
+                                extractNativeLibs, forcePrimaryCpuAbi);
                 derivedAbi.first.applyTo(parsedPackage);
                 derivedAbi.second.applyTo(parsedPackage);
                 Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
@@ -11659,6 +11681,9 @@ public class PackageManagerService extends IPackageManager.Stub
                 // package setting.
                 parsedPackage.setPrimaryCpuAbi(primaryCpuAbiFromSettings)
                         .setSecondaryCpuAbi(secondaryCpuAbiFromSettings);
+                if (!"".equals(forcePrimaryCpuAbi)) {
+                    parsedPackage.setPrimaryCpuAbi(forcePrimaryCpuAbi);
+                }
 
                 final PackageAbiHelper.NativeLibraryPaths nativeLibraryPaths =
                         packageAbiHelper.getNativeLibraryPaths(parsedPackage,
@@ -11680,6 +11705,10 @@ public class PackageManagerService extends IPackageManager.Stub
                 // use that and derive the native library path based on the new codepath.
                 parsedPackage.setPrimaryCpuAbi(pkgSetting.primaryCpuAbiString)
                         .setSecondaryCpuAbi(pkgSetting.secondaryCpuAbiString);
+            }
+
+            if (!"".equals(forcePrimaryCpuAbi)) {
+                parsedPackage.setPrimaryCpuAbi(forcePrimaryCpuAbi);
             }
 
             // Set native library paths again. For moves, the path will be updated based on the
@@ -17636,7 +17665,7 @@ public class PackageManagerService extends IPackageManager.Stub
                 final Pair<PackageAbiHelper.Abis, PackageAbiHelper.NativeLibraryPaths>
                         derivedAbi = mInjector.getAbiHelper().derivePackageAbi(parsedPackage,
                         isUpdatedSystemAppFromExistingSetting || isUpdatedSystemAppInferred,
-                        abiOverride, extractNativeLibs);
+                        abiOverride, extractNativeLibs, null);
                 derivedAbi.first.applyTo(parsedPackage);
                 derivedAbi.second.applyTo(parsedPackage);
             } catch (PackageManagerException pme) {
@@ -25889,6 +25918,220 @@ public class PackageManagerService extends IPackageManager.Stub
         public SigningDetails getSigningDetails() {
             return mSigningDetails;
         }
+    }
+
+    private Map<String, Integer> mPackageUiModeConfigMap = new HashMap<String, Integer>();
+    private static String VENDOR_CONFIG = "/vendor/etc/package_uimode_config.xml";
+    private static String DATA_CONFIG = "/data/system/package_uimode_config.xml";
+
+    /**
+     * @hide
+     */
+    public void setPackageUiModeType(String packageName, int oldUiMode, int newUiMode) {
+        RandomAccessFile randomAccessFile = null;
+        try {
+            File configFilter = new File(DATA_CONFIG);
+            randomAccessFile = new RandomAccessFile(configFilter, "rw");
+            String line = null;
+            long lastPoint = 0;
+            StringBuilder totalStr = new StringBuilder();
+            while ((line = randomAccessFile.readLine()) != null) {
+                long point = randomAccessFile.getFilePointer();
+                if (line.contains(packageName) && line.contains(String.format("uiMode=\"%d\"", oldUiMode))) {
+                    String str = line.replace(String.format("uiMode=\"%d\"", oldUiMode), String.format("uiMode=\"%d\"", newUiMode));
+                    randomAccessFile.seek(lastPoint);
+                    randomAccessFile.writeBytes(str);
+                    totalStr.append(str);
+                    lastPoint = point;
+                    continue;
+                }
+                lastPoint = point;
+                totalStr.append(line);
+            }
+            if (!totalStr.toString().contains(packageName)) {
+                randomAccessFile.seek(lastPoint - 26);
+                randomAccessFile.writeBytes(String.format("    <app package=\"%s\" uiMode=\"%d\"/>\n</ui-mode-package-config>\n", packageName, newUiMode));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (randomAccessFile != null) {
+                    randomAccessFile.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        File configFilter = new File(DATA_CONFIG);
+        if (configFilter.exists()) {
+            mPackageUiModeConfigMap.clear();
+            FileInputStream stream = null;
+            try {
+                stream = new FileInputStream(configFilter);
+                XmlPullParser xmlPullParser = Xml.newPullParser();
+                xmlPullParser.setInput(stream, null);
+                int type;
+                do {
+                    type = xmlPullParser.next();
+                    if (type == XmlPullParser.START_TAG) {
+                        String tag = xmlPullParser.getName();
+                        if (DEBUG_UIMODE) {
+                            Slog.d(TAG, "getConfigMap: tag = " + tag);
+                        }
+                        if ("app".equals(tag)) {
+                            String pkgName = xmlPullParser.getAttributeValue(null, "package");
+                            String uiMode = xmlPullParser.getAttributeValue(null, "uiMode");
+                            if (DEBUG_UIMODE) {
+                                Slog.d(TAG, "getConfigMap: pkgName = " + pkgName + ", uiMode = " + uiMode);
+                            }
+                            if (!TextUtils.isEmpty(pkgName) && !TextUtils.isEmpty(uiMode)) {
+                                int parseUiMode = Integer.parseInt(uiMode);
+                                mPackageUiModeConfigMap.put(pkgName, parseUiMode >= 0 ? parseUiMode : -1);
+                            }
+                        } else {
+                            if (DEBUG_UIMODE) {
+                                Slog.d(TAG, "getConfigMap: , tag != app");
+                            }
+                        }
+                    }
+                } while (type != XmlPullParser.END_DOCUMENT);
+            } catch (NullPointerException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (NumberFormatException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (XmlPullParserException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (IndexOutOfBoundsException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (IOException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } finally {
+                try {
+                    if (stream != null) {
+                        stream.close();
+                    }
+                } catch (IOException e) {
+                    Slog.w(TAG, "stream.close failed");
+                }
+            }
+        } else {
+            if (DEBUG_UIMODE) {
+                Slog.w(TAG, "package_uimode_config.xml is not exists");
+            }
+        }
+    }
+
+    /**
+     * @hide
+     */
+    public int getPackageUiModeType(String packageName) {
+        File configFilter = new File(DATA_CONFIG);
+        if (!configFilter.exists()) {
+            try {
+                int byteSum = 0;
+                int byteRead = 0;
+                File vendorFilter = new File(VENDOR_CONFIG);
+                configFilter.createNewFile();
+                if (vendorFilter.exists()) {
+                    InputStream inStream = new FileInputStream(vendorFilter);
+                    FileOutputStream fs = new FileOutputStream(configFilter);
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((byteRead = inStream.read(buffer)) != -1) {
+                        byteSum += byteRead;
+                        fs.write(buffer, 0, byteRead);
+                    }
+                    inStream.close();
+                    fs.close();
+                }
+                int result = android.os.FileUtils.setPermissions(configFilter, android.os.FileUtils.S_IRWXU | android.os.FileUtils.S_IRWXG | android.os.FileUtils.S_IRWXO, -1, -1);
+                if (DEBUG_UIMODE) {
+                    Slog.w(TAG, "chmod file result = " + result);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        configFilter = new File(DATA_CONFIG);
+        if (mPackageUiModeConfigMap != null && mPackageUiModeConfigMap.size() <= 0 && configFilter.exists()) {
+            FileInputStream stream = null;
+            try {
+                stream = new FileInputStream(configFilter);
+                XmlPullParser xmlPullParser = Xml.newPullParser();
+                xmlPullParser.setInput(stream, null);
+                int type;
+                do {
+                    type = xmlPullParser.next();
+                    if (type == XmlPullParser.START_TAG) {
+                        String tag = xmlPullParser.getName();
+                        if (DEBUG_UIMODE) {
+                            Slog.d(TAG, "getConfigMap: tag = " + tag);
+                        }
+                        if ("app".equals(tag)) {
+                            String pkgName = xmlPullParser.getAttributeValue(null, "package");
+                            String uiMode = xmlPullParser.getAttributeValue(null, "uiMode");
+                            if (DEBUG_UIMODE) {
+                                Slog.d(TAG, "getConfigMap: pkgName = " + pkgName + ", uiMode = " + uiMode);
+                            }
+                            if (!TextUtils.isEmpty(pkgName) && !TextUtils.isEmpty(uiMode)) {
+                                int parseUiMode = Integer.parseInt(uiMode);
+                                mPackageUiModeConfigMap.put(pkgName, parseUiMode >= 0 ? parseUiMode : -1);
+                            }
+                        } else {
+                            if (DEBUG_UIMODE) {
+                                Slog.d(TAG, "getConfigMap: , tag != app");
+                            }
+                        }
+                    }
+                } while (type != XmlPullParser.END_DOCUMENT);
+            } catch (NullPointerException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (NumberFormatException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (XmlPullParserException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (IndexOutOfBoundsException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } catch (IOException e) {
+                Slog.w(TAG, "failed parsing " + configFilter, e);
+            } finally {
+                try {
+                    if (stream != null) {
+                        stream.close();
+                    }
+                } catch (IOException e) {
+                    Slog.w(TAG, "stream.close failed");
+                }
+            }
+        } else {
+            if (DEBUG_UIMODE) {
+                Slog.w(TAG, "package_uimode_config.xml is not exists or mPackageUiModeConfigMap > 0");
+            }
+        }
+
+        if (mPackageUiModeConfigMap != null && mPackageUiModeConfigMap.size() > 0) {
+            if (!TextUtils.isEmpty(packageName)) {
+                for (String pkgName : mPackageUiModeConfigMap.keySet()) {
+                    if (!TextUtils.isEmpty(pkgName) && packageName.equals(pkgName)) {
+                        Integer uiMode = mPackageUiModeConfigMap.get(packageName);
+                        if (uiMode != null && uiMode >= 0) {
+                            if (DEBUG_UIMODE) {
+                                Slog.d(TAG, "fix uiMode for app package = " + packageName + " , uiMode = " + uiMode.toString());
+                            }
+                            return uiMode;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+            }
+        } else {
+            return -1;
+        }
+        return -1;
     }
 }
 

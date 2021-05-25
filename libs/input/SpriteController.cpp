@@ -269,6 +269,7 @@ void SpriteController::doUpdateSprites() {
                         update.state.transformationMatrix.dtdy);
             }
 
+
             if (wantSurfaceVisibleAndDrawn
                     && (becomingVisible
                             || (update.state.dirty & (DIRTY_HOTSPOT | DIRTY_ICON_STYLE)))) {
@@ -445,6 +446,9 @@ void SpriteController::SpriteImpl::setLayer(int32_t layer) {
     }
 }
 
+
+
+
 void SpriteController::SpriteImpl::setAlpha(float alpha) {
     AutoMutex _l(mController->mLock);
 
@@ -472,6 +476,12 @@ void SpriteController::SpriteImpl::setDisplayId(int32_t displayId) {
         invalidateLocked(DIRTY_DISPLAY_ID);
     }
 }
+
+int32_t SpriteController::SpriteImpl::getDisplayId() {
+    AutoMutex _l(mController->mLock);
+    return mLocked.state.displayId; 
+}
+
 
 void SpriteController::SpriteImpl::invalidateLocked(uint32_t dirty) {
     bool wasDirty = mLocked.state.dirty;

@@ -1711,6 +1711,7 @@ public final class DisplayManagerService extends SystemService {
             pw.println();
             pw.println("Display Devices: size=" + mDisplayDevices.size());
             for (DisplayDevice device : mDisplayDevices) {
+                pw.println();
                 pw.println("  " + device.getDisplayDeviceInfoLocked());
                 device.dumpLocked(ipw);
             }

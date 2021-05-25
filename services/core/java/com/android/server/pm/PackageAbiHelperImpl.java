@@ -296,7 +296,8 @@ final class PackageAbiHelperImpl implements PackageAbiHelper {
 
     @Override
     public Pair<Abis, NativeLibraryPaths> derivePackageAbi(AndroidPackage pkg,
-            boolean isUpdatedSystemApp, String cpuAbiOverride, boolean extractLibs)
+            boolean isUpdatedSystemApp, String cpuAbiOverride, boolean extractLibs,
+            String forcePrimaryCpuAbi)
             throws PackageManagerException {
         // Give ourselves some initial paths; we'll come back for another
         // pass once we've determined ABI below.
@@ -453,6 +454,9 @@ final class PackageAbiHelperImpl implements PackageAbiHelper {
         // Now that we've calculated the ABIs and determined if it's an internal app,
         // we will go ahead and populate the nativeLibraryPath.
 
+        if (null != forcePrimaryCpuAbi && !"".equals(forcePrimaryCpuAbi)) {
+            primaryCpuAbi = forcePrimaryCpuAbi;
+        }
         final Abis abis = new Abis(primaryCpuAbi, secondaryCpuAbi);
         return new Pair<>(abis,
                 getNativeLibraryPaths(abis, PackageManagerService.sAppLib32InstallDir,

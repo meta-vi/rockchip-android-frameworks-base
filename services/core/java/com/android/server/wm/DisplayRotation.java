@@ -317,7 +317,9 @@ public class DisplayRotation {
 
         if("true".equals(SystemProperties.get("ro.vendor.hdmirotationlock"))){
             Slog.d(TAG,"force set hdmi rotation-----");
-            mDemoHdmiRotation= Surface.ROTATION_0;
+            int rotation=Integer.valueOf(SystemProperties.get("ro.surface_flinger.primary_display_orientation","ORIENTATION_0").split("_")[1])/90;
+            mDemoHdmiRotation=(4-rotation)%4;
+            //mDemoHdmiRotation= Surface.ROTATION_0;
             mDemoHdmiRotationLock=true;
         }
 
@@ -342,6 +344,11 @@ public class DisplayRotation {
                 // $ adb shell setprop config.override_forced_orient true
                 // $ adb shell wm size reset
                 && !"true".equals(SystemProperties.get("config.override_forced_orient"));
+
+         if("2".equals(SystemProperties.get("persist.sys.forced_orient","0"))
+            &&"box".equals(SystemProperties.get("ro.target.product","unknow"))){
+               mDefaultFixedToUserRotation = true;
+        }
     }
 
     void applyCurrentRotation(@Surface.Rotation int rotation) {
@@ -789,7 +796,7 @@ public class DisplayRotation {
         if (mFixedToUserRotation == fixedToUserRotation) {
             return;
         }
-
+        SystemProperties.set("persist.sys.forced_orient",fixedToUserRotation+"");
         mFixedToUserRotation = fixedToUserRotation;
         mDisplayWindowSettings.setFixedToUserRotation(mDisplayContent, fixedToUserRotation);
         mService.updateRotation(true /* alwaysSendConfiguration */,

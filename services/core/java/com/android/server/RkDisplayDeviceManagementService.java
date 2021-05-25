@@ -205,6 +205,11 @@ class RkDisplayDeviceManagementService extends IRkDisplayDeviceManagementService
     public int setGamma(int dpy,int size,int[] red, int[] green, int[] blue){
         return mdrmModes.setGamma(dpy, size, red, green, blue);
     }
+
+    public int set3DLut(int dpy,int size,int[] red, int[] green, int[] blue){
+        return mdrmModes.set3DLut(dpy, size, red, green, blue);
+    }
+
     public void updateDisplayInfos(){
         mdrmModes.updateDisplayInfos();
     }

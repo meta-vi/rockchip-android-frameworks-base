@@ -22,6 +22,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.TestApi;
 import android.compat.annotation.UnsupportedAppUsage;
+import android.app.AppGlobals;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.res.ApkAssets;
@@ -34,14 +35,19 @@ import android.content.res.ResourcesImpl;
 import android.content.res.ResourcesKey;
 import android.content.res.loader.ResourcesLoader;
 import android.hardware.display.DisplayManagerGlobal;
+import android.os.Binder;
+import android.os.Environment;
 import android.os.IBinder;
 import android.os.Process;
+import android.os.RemoteException;
 import android.os.Trace;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
 import android.util.Slog;
+import android.util.Xml;
 import android.view.Display;
 import android.view.DisplayAdjustments;
 
@@ -49,6 +55,13 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.IndentingPrintWriter;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.ref.Reference;
@@ -67,6 +80,7 @@ import java.util.function.Consumer;
 public class ResourcesManager {
     static final String TAG = "ResourcesManager";
     private static final boolean DEBUG = false;
+    private static final boolean DEBUG_UIMODE = Log.isLoggable(TAG, Log.DEBUG);
 
     private static ResourcesManager sResourcesManager;
 
@@ -542,12 +556,54 @@ public class ResourcesManager {
 
         final DisplayMetrics dm = getDisplayMetrics(key.mDisplayId, daj);
         final Configuration config = generateConfig(key, dm);
+        if (android.os.SystemProperties.get("ro.target.product", "unknown").equals("box")) {
+            config.uiMode = fitUiMode(config);
+        }
         final ResourcesImpl impl = new ResourcesImpl(assets, dm, config, daj);
 
         if (DEBUG) {
             Slog.d(TAG, "- creating impl=" + impl + " with key: " + key);
         }
         return impl;
+    }
+
+    private String getPackageName() {
+        try {
+            if (AppGlobals.getPackageManager() != null) {
+                String[] packageNames = AppGlobals.getPackageManager().getPackagesForUid(Binder.getCallingUid());
+                if(packageNames != null && packageNames.length > 0 && !packageNames[0].equals("")) {
+                    if (DEBUG_UIMODE) {
+                        Slog.d(TAG, "getPackageName : " + packageNames[0]);
+                    }
+                    return packageNames[0];
+                } else {
+                    return null;
+                }
+            }
+        } catch (RemoteException e) {
+            Slog.i(TAG, "remoteException " + e.getMessage());
+        }
+        return null;
+    }
+
+    private int fitUiMode(Configuration configuration) {
+        int uiMode = configuration.uiMode;
+        try {
+            if (AppGlobals.getPackageManager() != null) {
+               uiMode = AppGlobals.getPackageManager().getPackageUiModeType(getPackageName());
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        if (uiMode == -1) {
+            uiMode = configuration.uiMode;
+        } else {
+            uiMode |= configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        }
+        if (DEBUG_UIMODE) {
+            Slog.d(TAG, "uiMode = " + uiMode);
+        }
+        return uiMode;
     }
 
     /**
