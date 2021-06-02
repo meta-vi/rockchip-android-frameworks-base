@@ -41,6 +41,9 @@ public class RkDisplayModes {
     private static native int nativeSetScreenScale(int display, int direction, int value);
     private static native int nativeSetHdrMode(int display, int hdrMode);
     private static native int nativeSetColorMode(int display, String format);
+    private static native RkDisplayModes.RkConnectorInfo[] nativeGetConnectorInfo();
+    private static native int nativeUpdateDispHeader();
+
 
     private static RkDisplayModes.RkPhysicalDisplayInfo mDisplayInfos[];
     private static RkDisplayModes.RkPhysicalDisplayInfo mMainDisplayInfos[];
@@ -404,6 +407,47 @@ public class RkDisplayModes {
         }
     }
 
+    public static final class RkConnectorInfo {
+        public int type;
+        public int id;
+        public int state;
+
+        public RkConnectorInfo() {
+        }
+
+        public RkConnectorInfo(RkConnectorInfo other) {
+            copyFrom(other);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof RkConnectorInfo && equals((RkConnectorInfo)o);
+        }
+
+        public boolean equals(RkConnectorInfo other) {
+            return other != null
+                && type == other.type
+                && id == other.id
+                && state == other.state;
+        }
+
+        @Override
+        public int hashCode() {
+            return 0; // don't care
+        }
+
+        public void copyFrom(RkConnectorInfo other) {
+            type = other.type;
+            id = other.id;
+            state = other.state;
+        }
+
+        @Override
+        public String toString() {
+            return "RkConnectorInfo{" + "type " + type + " id " + id + " state " + state + "}";
+        }
+    }
+
     public static RkDisplayModes.RkPhysicalDisplayInfo[] getDisplayConfigs(int dpy) {
         if (dpy < 0) {
             throw new IllegalArgumentException("dpy is ilegal");
@@ -742,4 +786,13 @@ public class RkDisplayModes {
     {
         return nativeSetColorMode(display, format);
     }
+
+    public RkConnectorInfo[] getConnectorInfo(){
+        return nativeGetConnectorInfo();
+    }
+
+    public int updateDispHeader(){
+        return nativeUpdateDispHeader();
+    }
+
 }

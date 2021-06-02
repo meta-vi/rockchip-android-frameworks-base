@@ -743,4 +743,26 @@ public class RkDisplayOutputManager {
         }
         return ret;
     }
+
+    public String[] getConnectorInfo(){
+        String[] ret;
+        try {
+            ret = mService.getConnectorInfo();
+        } catch (Exception e) {
+            Log.e(TAG, "Error getConnectorInfo :" + e);
+            return null;
+        }
+        return ret;
+    }
+
+    public int updateDispHeader(){
+        int ret;
+        try {
+            ret = mService.updateDispHeader();
+        } catch (Exception e) {
+            Log.e(TAG, "Error updateDispHeader :" + e);
+            return -1;
+        }
+        return ret;
+    }
 }

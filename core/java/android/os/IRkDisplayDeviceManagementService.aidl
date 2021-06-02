@@ -150,4 +150,12 @@ interface IRkDisplayDeviceManagementService
      *set3DLut
     */
     int set3DLut(int dpy,int size,in int[] red, in int[] green,in int[] blue);
+    /**
+     *getConnectorInfo
+    */
+    String[] getConnectorInfo();
+    /**
+     *updateDispHeader
+    */
+    int updateDispHeader();
 }

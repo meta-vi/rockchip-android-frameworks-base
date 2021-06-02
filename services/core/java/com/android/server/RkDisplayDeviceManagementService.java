@@ -34,6 +34,7 @@ import android.content.IntentFilter;
 import android.os.SystemClock;
 
 import com.android.server.rkdisplay.RkDisplayModes;
+import com.android.server.rkdisplay.RkDisplayModes.RkConnectorInfo;
 import com.android.server.rkdisplay.HdmiReceiver;
 
 /**
@@ -217,6 +218,19 @@ class RkDisplayDeviceManagementService extends IRkDisplayDeviceManagementService
     public int saveConfig() {
         mdrmModes.saveConfig();
         return 0;
+    }
+
+    public String[] getConnectorInfo(){
+        RkConnectorInfo[] info = mdrmModes.getConnectorInfo();
+        String[] ret = new String[info.length];
+        for(int i = 0; i< info.length; i++){
+            ret[i] = "type:" + info[i].type + ",id:" + info[i].id + ",state:" + info[i].state;
+        }
+        return ret;
+    }
+
+    public int updateDispHeader(){
+        return mdrmModes.updateDispHeader();
     }
 
 }
