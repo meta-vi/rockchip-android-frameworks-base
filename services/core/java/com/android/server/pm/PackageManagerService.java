@@ -12330,7 +12330,8 @@ public class PackageManagerService extends IPackageManager.Stub
 
             // If the package is not on a system partition ensure it is signed with at least the
             // minimum signature scheme version required for its target SDK.
-            if ((parseFlags & PackageParser.PARSE_IS_SYSTEM_DIR) == 0) {
+            if ((parseFlags & PackageParser.PARSE_IS_SYSTEM_DIR) == 0
+                    && (parseFlags & PackageParser.PARSE_IS_PREBUNDLED_DIR) == 0) {
                 int minSignatureSchemeVersion =
                         ApkSignatureVerifier.getMinimumSignatureSchemeVersionForTargetSdk(
                                 pkg.getTargetSdkVersion());
