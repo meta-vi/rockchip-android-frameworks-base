@@ -38,6 +38,7 @@
         </receiver>
 
         <activity android:name=".InstallStart"
+                android:configChanges="orientation|keyboardHidden|screenSize"
                 android:theme="@android:style/Theme.Translucent.NoTitleBar"
                 android:exported="true"
                 android:excludeFromRecents="true">
@@ -61,16 +62,20 @@
         </activity>
 
         <activity android:name=".InstallStaging"
+                android:configChanges="orientation|keyboardHidden|screenSize"
                 android:exported="false" />
 
         <activity android:name=".DeleteStagedFileOnResult"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@style/Theme.AlertDialogActivity.NoActionBar"
             android:exported="false" />
 
         <activity android:name=".PackageInstallerActivity"
+                android:configChanges="orientation|keyboardHidden|screenSize"
                 android:exported="false" />
 
         <activity android:name=".InstallInstalling"
+                android:configChanges="orientation|keyboardHidden|screenSize"
                 android:theme="@style/Theme.AlertDialogActivity.NoAnimation"
                 android:exported="false" />
 
@@ -83,10 +88,12 @@
         </receiver>
 
         <activity android:name=".InstallSuccess"
+                android:configChanges="orientation|keyboardHidden|screenSize"
                 android:theme="@style/Theme.AlertDialogActivity.NoAnimation"
                 android:exported="false" />
 
         <activity android:name=".InstallFailed"
+                android:configChanges="orientation|keyboardHidden|screenSize"
                 android:theme="@style/Theme.AlertDialogActivity.NoAnimation"
                 android:exported="false" />
 
@@ -120,6 +127,7 @@
         </receiver>
 
         <activity android:name=".UninstallUninstalling"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:theme="@style/Theme.AlertDialogActivity.NoActionBar"
             android:excludeFromRecents="true"
             android:exported="false" />
