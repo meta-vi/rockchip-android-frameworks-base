@@ -64,6 +64,7 @@ import com.android.systemui.tuner.TunerService.Tunable;
 import com.android.systemui.util.animation.DisappearParameters;
 
 import java.io.FileDescriptor;
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -147,7 +148,7 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
     private int mMediaTotalBottomMargin;
     private int mFooterMarginStartHorizontal;
     private Consumer<Boolean> mMediaVisibilityChangedListener;
-
+    private static final String CHECK_DSI_SYSFS_PATH = "/sys/class/drm/card0-DSI-1/status";
 
     @Inject
     public QSPanel(
@@ -680,6 +681,12 @@ public class QSPanel extends LinearLayout implements Tunable, Callback, Brightne
             ToggleSliderView brightnessSlider = findViewById(R.id.brightness_slider);
             ToggleSliderView mirrorSlider = mBrightnessMirrorController.getMirror()
                     .findViewById(R.id.brightness_slider);
+            File file = new File(CHECK_DSI_SYSFS_PATH);
+
+            if(!file.exists()) {
+                brightnessSlider.setVisibility(GONE);
+                mirrorSlider.setVisibility(GONE);
+            }
             brightnessSlider.setMirror(mirrorSlider);
             brightnessSlider.setMirrorController(mBrightnessMirrorController);
         }
