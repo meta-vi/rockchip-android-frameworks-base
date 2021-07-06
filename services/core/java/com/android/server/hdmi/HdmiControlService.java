@@ -455,8 +455,7 @@ public class HdmiControlService extends SystemService {
         }
         mPowerStatus = HdmiControlManager.POWER_STATUS_TRANSIENT_TO_ON;
         mProhibitMode = false;
-        //mHdmiControlEnabled = readBooleanSetting(Global.HDMI_CONTROL_ENABLED, true);
-        mHdmiControlEnabled = false;
+        mHdmiControlEnabled = readBooleanSetting(Global.HDMI_CONTROL_ENABLED, false);
         mMhlInputChangeEnabled = readBooleanSetting(Global.MHL_INPUT_SWITCHING_ENABLED, true);
 
         if (mCecController == null) {
