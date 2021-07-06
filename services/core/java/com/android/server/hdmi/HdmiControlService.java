@@ -507,7 +507,7 @@ public class HdmiControlService extends SystemService {
         }
         mPowerStatus = getInitialPowerStatus();
         mProhibitMode = false;
-        mHdmiControlEnabled = readBooleanSetting(Global.HDMI_CONTROL_ENABLED, true);
+        mHdmiControlEnabled = readBooleanSetting(Global.HDMI_CONTROL_ENABLED, false);
         mHdmiCecVolumeControlEnabled = readBooleanSetting(
                 Global.HDMI_CONTROL_VOLUME_CONTROL_ENABLED, true);
         mMhlInputChangeEnabled = readBooleanSetting(Global.MHL_INPUT_SWITCHING_ENABLED, true);
