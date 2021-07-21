@@ -3261,21 +3261,6 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
         }
     }
 
-    public int getFrontActivityPerformanceModeLocked() {
-        int mode = PowerManager.PERFORMANCE_MODE_NORMAL;
-        final ActivityStack mainStack = mRootWindowContainer.getTopDisplayFocusedStack();
-        ActivityRecord r = mainStack.topRunningActivityLocked();
-        if (r != null) {
-            try {
-                Log.v(TAG,"getPackageFerformanceMode--"+r.mActivityComponent.toString()+"----"+r.packageName);
-                mode = AppGlobals.getPackageManager().getPackagePerformanceMode(
-                        r.mActivityComponent.toString());
-            } catch (RemoteException e) {
-            }
-        }
-        return mode;
-    }
-
     @Override
     public int addAppTask(IBinder activityToken, Intent intent,
             ActivityManager.TaskDescription description, Bitmap thumbnail) throws RemoteException {
