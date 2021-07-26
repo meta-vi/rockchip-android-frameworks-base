@@ -16,6 +16,10 @@
 
 package com.android.systemui.statusbar.phone;
 
+import static com.android.systemui.classifier.Classifier.BOUNCER_UNLOCK;
+import static com.android.systemui.classifier.Classifier.QUICK_SETTINGS;
+import static com.android.systemui.classifier.Classifier.UNLOCK;
+
 import static java.lang.Float.isNaN;
 
 import android.app.KeyguardManager;
@@ -44,6 +48,7 @@ import com.android.internal.util.LatencyTracker;
 import com.android.systemui.DejankUtils;
 import com.android.systemui.Interpolators;
 import com.android.systemui.R;
+import com.android.systemui.classifier.Classifier;
 import com.android.systemui.doze.DozeLog;
 import com.android.systemui.plugins.FalsingManager;
 import com.android.systemui.statusbar.FlingAnimationUtils;
@@ -400,12 +405,17 @@ public abstract class PanelViewController {
                 mLockscreenGestureLogger.write(MetricsEvent.ACTION_LS_UNLOCK, heightDp, velocityDp);
                 mLockscreenGestureLogger.log(LockscreenUiEvent.LOCKSCREEN_UNLOCK);
             }
+            @Classifier.InteractionType int interactionType = vel > 0
+                    ? QUICK_SETTINGS : (
+                            mKeyguardStateController.canDismissLockScreen()
+                                    ? UNLOCK : BOUNCER_UNLOCK);
+
             if (isQuicklyUnlockMachine()) {
                 if (mExpandedFraction > 0f) {
-                    fling(vel, expand, isFalseTouch(x, y));
+                    fling(vel, expand, isFalseTouch(x, y, interactionType));
                 }
             } else {
-                fling(vel, expand, isFalseTouch(x, y));
+                fling(vel, expand, isFalseTouch(x, y, interactionType));
             }
             onTrackingStopped(expand);
             mUpdateFlingOnLayout = expand && mPanelClosedOnDown && !mHasLayoutedSinceDown;
@@ -501,7 +511,11 @@ public abstract class PanelViewController {
             return true;
         }
 
-        if (isFalseTouch(x, y)) {
+        @Classifier.InteractionType int interactionType = vel > 0
+                ? QUICK_SETTINGS : (
+                        mKeyguardStateController.canDismissLockScreen() ? UNLOCK : BOUNCER_UNLOCK);
+
+        if (isFalseTouch(x, y, interactionType)) {
             return true;
         }
         if (Math.abs(vectorVel) < mFlingAnimationUtils.getMinVelocityPxPerSecond()) {
@@ -520,12 +534,13 @@ public abstract class PanelViewController {
      * @param y the final y-coordinate when the finger was lifted
      * @return whether this motion should be regarded as a false touch
      */
-    private boolean isFalseTouch(float x, float y) {
+    private boolean isFalseTouch(float x, float y,
+            @Classifier.InteractionType int interactionType) {
         if (!mStatusBar.isFalsingThresholdNeeded()) {
             return false;
         }
         if (mFalsingManager.isClassifierEnabled()) {
-            return mFalsingManager.isFalseTouch();
+            return mFalsingManager.isFalseTouch(interactionType);
         }
         if (!mTouchAboveFalsingThreshold) {
             return true;

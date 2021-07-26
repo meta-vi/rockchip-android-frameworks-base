@@ -5260,7 +5260,8 @@ public class NotificationManagerService extends SystemService {
                 Intent appIntent = getContext().getPackageManager().getLaunchIntentForPackage(pkg);
                 if (appIntent != null) {
                     summaryNotification.contentIntent = PendingIntent.getActivityAsUser(
-                            getContext(), 0, appIntent, 0, null, UserHandle.of(userId));
+                            getContext(), 0, appIntent, PendingIntent.FLAG_IMMUTABLE, null,
+                            UserHandle.of(userId));
                 }
                 final StatusBarNotification summarySbn =
                         new StatusBarNotification(adjustedSbn.getPackageName(),
@@ -5723,7 +5724,7 @@ public class NotificationManagerService extends SystemService {
                     + " trying to post for invalid pkg " + pkg + " in user " + incomingUserId);
         }
 
-        checkRestrictedCategories(notification);
+        checkRestrictedCategories(pkg, notification);
 
         // Fix the notification as best we can.
         try {
@@ -6875,11 +6876,12 @@ public class NotificationManagerService extends SystemService {
             final PendingIntent pi = PendingIntent.getBroadcast(getContext(),
                     REQUEST_CODE_TIMEOUT,
                     new Intent(ACTION_NOTIFICATION_TIMEOUT)
+                            .setPackage(PackageManagerService.PLATFORM_PACKAGE_NAME)
                             .setData(new Uri.Builder().scheme(SCHEME_TIMEOUT)
                                     .appendPath(record.getKey()).build())
                             .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                             .putExtra(EXTRA_KEY, record.getKey()),
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     mSystemClock.elapsedRealtime() + record.getNotification().getTimeoutAfter(),
                     pi);
@@ -7182,15 +7184,7 @@ public class NotificationManagerService extends SystemService {
                     // so need to check the notification still valide for vibrate.
                     synchronized (mNotificationLock) {
                         if (mNotificationsByKey.get(record.getKey()) != null) {
-                            // Vibrator checks the appops for the op package, not the caller,
-                            // so we need to add the bypass dnd flag to be heard. it's ok to
-                            // always add this flag here because we've already checked that we can
-                            // bypass dnd
-                            AudioAttributes.Builder aab =
-                                    new AudioAttributes.Builder(record.getAudioAttributes())
-                                    .setFlags(FLAG_BYPASS_INTERRUPTION_POLICY);
-                            mVibrator.vibrate(record.getSbn().getUid(), record.getSbn().getOpPkg(),
-                                    effect, "Notification (delayed)", aab.build());
+                            vibrate(record, effect, true);
                         } else {
                             Slog.e(TAG, "No vibration for canceled notification : "
                                     + record.getKey());
@@ -7198,13 +7192,22 @@ public class NotificationManagerService extends SystemService {
                     }
                 }).start();
             } else {
-                mVibrator.vibrate(record.getSbn().getUid(), record.getSbn().getPackageName(),
-                        effect, "Notification", record.getAudioAttributes());
+                vibrate(record, effect, false);
             }
             return true;
         } finally{
             Binder.restoreCallingIdentity(identity);
         }
+    }
+
+    private void vibrate(NotificationRecord record, VibrationEffect effect, boolean delayed) {
+        // We need to vibrate as "android" so we can breakthrough DND. VibratorManagerService
+        // doesn't have a concept of vibrating on an app's behalf, so add the app information
+        // to the reason so we can still debug from bugreports
+        String reason = "Notification (" + record.getSbn().getOpPkg() + " "
+                + record.getSbn().getUid() + ") " + (delayed ? "(Delayed)" : "");
+        mVibrator.vibrate(Process.SYSTEM_UID, PackageManagerService.PLATFORM_PACKAGE_NAME,
+                effect, reason, record.getAudioAttributes());
     }
 
     private boolean isNotificationForCurrentUser(NotificationRecord record) {
@@ -8566,7 +8569,7 @@ public class NotificationManagerService extends SystemService {
      * Check if the notification is of a category type that is restricted to system use only,
      * if so throw SecurityException
      */
-    private void checkRestrictedCategories(final Notification notification) {
+    private void checkRestrictedCategories(final String pkg, final Notification notification) {
         try {
             if (!mPackageManager.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE, 0)) {
                 return;
@@ -8576,10 +8579,24 @@ public class NotificationManagerService extends SystemService {
                     + "restrictions check thus the check will be done anyway");
         }
         if (Notification.CATEGORY_CAR_EMERGENCY.equals(notification.category)
-                || Notification.CATEGORY_CAR_WARNING.equals(notification.category)
-                || Notification.CATEGORY_CAR_INFORMATION.equals(notification.category)) {
+                || Notification.CATEGORY_CAR_WARNING.equals(notification.category)) {
                     checkCallerIsSystem();
         }
+
+        if (Notification.CATEGORY_CAR_INFORMATION.equals(notification.category)) {
+            checkCallerIsSystemOrSUW(pkg);
+        }
+    }
+
+    private void checkCallerIsSystemOrSUW(final String pkg) {
+
+        final PackageManagerInternal pmi = LocalServices.getService(
+                PackageManagerInternal.class);
+        String suwPkg =  pmi.getSetupWizardPackageName();
+        if (suwPkg != null && suwPkg.equals(pkg)) {
+            return;
+        }
+        checkCallerIsSystem();
     }
 
     @VisibleForTesting
