@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
 public class DeviceInfoUtils {
     private static final String TAG = "DeviceInfoUtils";
 
-    private static final String FILENAME_MSV = "/sys/board_properties/soc/msv";
+    private static final String FILENAME_MSV = "/proc/boardmodel";
 
     /**
      * Reads a line from the specified file.
@@ -107,10 +107,8 @@ public class DeviceInfoUtils {
         // production device so that we don't accidentally show that it's an ENGINEERING device.
         try {
             String msv = readLine(FILENAME_MSV);
-            // Parse as a hex number. If it evaluates to a zero, then it's an engineering build.
-            if (Long.parseLong(msv, 16) == 0) {
-                return " (ENGINEERING)";
-            }
+            Log.d(TAG, "getMsvSuffix: msv = " + msv);
+            return msv;
         } catch (IOException|NumberFormatException e) {
             // Fail quietly, as the file may not exist on some devices, or may be unreadable
         }
