@@ -1259,6 +1259,11 @@ public final class DisplayManagerService extends SystemService {
         final int count = mDisplayDevices.size();
         for (int i = 0; i < count; i++) {
             DisplayDevice device = mDisplayDevices.get(i);
+
+		if(device.getDisplayDeviceInfoLocked().type==Display.TYPE_EXTERNAL){
+			String rotation = SystemProperties.get("persist.sys.rotation.einit","0");
+			device.getDisplayDeviceInfoLocked().rotation=Integer.valueOf(rotation);
+			}
             configureDisplayLocked(t, device);
             device.performTraversalLocked(t);
         }
