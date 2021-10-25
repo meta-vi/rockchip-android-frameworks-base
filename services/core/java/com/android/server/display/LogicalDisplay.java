@@ -413,10 +413,23 @@ final class LogicalDisplay {
             device.setDesiredDisplayModeSpecsLocked(mDesiredDisplayModeSpecs);
             device.setRequestedColorModeLocked(mRequestedColorMode);
         } else {
-            // Reset to default for non primary displays
-            device.setDesiredDisplayModeSpecsLocked(
-                    new DisplayModeDirector.DesiredDisplayModeSpecs());
-            device.setRequestedColorModeLocked(0);
+            if (SystemProperties.getBoolean("vendor.hwc.enable_display_configs", false)){
+               if (device.getDisplayDeviceInfoLocked().type==Display.TYPE_EXTERNAL){
+                 //int modeId=SystemProperties.getInt("sys.edisplay.mode-1",0);
+                 //device.setDesiredDisplayModeSpecsLocked(desiredDisplayModeSpecs);
+                 device.setRequestedColorModeLocked(0);
+                 //device.requestDisplayModesLocked(0, modeId);
+               }else{
+                 device.setDesiredDisplayModeSpecsLocked(
+                        new DisplayModeDirector.DesiredDisplayModeSpecs());
+                 device.setRequestedColorModeLocked(0);
+               }
+            }else{
+              // Reset to default for non primary displays
+              device.setDesiredDisplayModeSpecsLocked(
+                      new DisplayModeDirector.DesiredDisplayModeSpecs());
+              device.setRequestedColorModeLocked(0);
+            }
         }
 
         device.setAutoLowLatencyModeLocked(mRequestedMinimalPostProcessing);

@@ -16,6 +16,7 @@
 
 package com.android.systemui.media;
 
+import static android.app.Notification.safeCharSequence;
 import static android.provider.Settings.ACTION_MEDIA_CONTROLS_SETTINGS;
 
 import android.app.PendingIntent;
@@ -42,10 +43,10 @@ import androidx.annotation.UiThread;
 import androidx.constraintlayout.widget.ConstraintSet;
 
 import com.android.settingslib.Utils;
-import com.android.settingslib.media.MediaOutputSliceConstants;
 import com.android.settingslib.widget.AdaptiveIcon;
 import com.android.systemui.R;
 import com.android.systemui.dagger.qualifiers.Background;
+import com.android.systemui.media.dialog.MediaOutputDialogFactory;
 import com.android.systemui.plugins.ActivityStarter;
 import com.android.systemui.statusbar.phone.KeyguardDismissUtil;
 import com.android.systemui.util.animation.TransitionLayout;
@@ -93,7 +94,7 @@ public class MediaControlPanel {
     private int mAlbumArtRadius;
     // This will provide the corners for the album art.
     private final ViewOutlineProvider mViewOutlineProvider;
-
+    private final MediaOutputDialogFactory mMediaOutputDialogFactory;
     /**
      * Initialize a new control panel
      * @param context
@@ -104,7 +105,8 @@ public class MediaControlPanel {
     public MediaControlPanel(Context context, @Background Executor backgroundExecutor,
             ActivityStarter activityStarter, MediaViewController mediaViewController,
             SeekBarViewModel seekBarViewModel, Lazy<MediaDataManager> lazyMediaDataManager,
-            KeyguardDismissUtil keyguardDismissUtil) {
+            KeyguardDismissUtil keyguardDismissUtil, MediaOutputDialogFactory
+            mediaOutputDialogFactory) {
         mContext = context;
         mBackgroundExecutor = backgroundExecutor;
         mActivityStarter = activityStarter;
@@ -112,6 +114,7 @@ public class MediaControlPanel {
         mMediaViewController = mediaViewController;
         mMediaDataManagerLazy = lazyMediaDataManager;
         mKeyguardDismissUtil = keyguardDismissUtil;
+        mMediaOutputDialogFactory = mediaOutputDialogFactory;
         loadDimens();
 
         mViewOutlineProvider = new ViewOutlineProvider() {
@@ -259,7 +262,7 @@ public class MediaControlPanel {
 
         // Song name
         TextView titleText = mViewHolder.getTitleText();
-        titleText.setText(data.getSong());
+        titleText.setText(safeCharSequence(data.getSong()));
 
         // App title
         TextView appName = mViewHolder.getAppName();
@@ -267,20 +270,14 @@ public class MediaControlPanel {
 
         // Artist name
         TextView artistText = mViewHolder.getArtistText();
-        artistText.setText(data.getArtist());
+        artistText.setText(safeCharSequence(data.getArtist()));
 
         // Transfer chip
         mViewHolder.getSeamless().setVisibility(View.VISIBLE);
         setVisibleAndAlpha(collapsedSet, R.id.media_seamless, true /*visible */);
         setVisibleAndAlpha(expandedSet, R.id.media_seamless, true /*visible */);
         mViewHolder.getSeamless().setOnClickListener(v -> {
-            final Intent intent = new Intent()
-                    .setAction(MediaOutputSliceConstants.ACTION_MEDIA_OUTPUT)
-                    .putExtra(MediaOutputSliceConstants.EXTRA_PACKAGE_NAME,
-                            data.getPackageName())
-                    .putExtra(MediaOutputSliceConstants.KEY_MEDIA_SESSION_TOKEN, mToken);
-            mActivityStarter.startActivity(intent, false, true /* dismissShade */,
-                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            mMediaOutputDialogFactory.create(data.getPackageName(), true);
         });
 
         ImageView iconView = mViewHolder.getSeamlessIcon();
@@ -359,7 +356,15 @@ public class MediaControlPanel {
         final MediaController controller = getController();
         mBackgroundExecutor.execute(() -> mSeekBarViewModel.updateController(controller));
 
+        // Guts label
+        boolean isDismissible = data.isClearable();
+        mViewHolder.getSettingsText().setText(isDismissible
+                ? R.string.controls_media_close_session
+                : R.string.controls_media_active_session);
+
         // Dismiss
+        mViewHolder.getDismissLabel().setAlpha(isDismissible ? 1 : DISABLED_ALPHA);
+        mViewHolder.getDismiss().setEnabled(isDismissible);
         mViewHolder.getDismiss().setOnClickListener(v -> {
             if (mKey != null) {
                 closeGuts();

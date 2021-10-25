@@ -80,6 +80,14 @@ static struct{
     jfieldID depth_capa;
 }gRkColorModeSupportInfo;
 
+static struct{
+    jclass clazz;
+    jmethodID ctor;
+    jfieldID type;
+    jfieldID id;
+    jfieldID state;
+}gRkConnectorInfo;
+
 sp<IRkOutputManager> mComposer = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -470,6 +478,35 @@ static jobjectArray nativeGetDisplayConfigs(JNIEnv* env, jclass clazz,
     return configArray;
 }
 
+static jobjectArray nativeGetConnectorInfo(JNIEnv* env, jclass clazz) {
+    hidl_vec<RkConnectorInfo> minfo;
+    if (mComposer != nullptr)
+    {
+        mComposer->getConnectorInfo([&](const auto& tmpResult, const auto& tmpInfo)
+        {
+             if (tmpResult == Result::OK) {
+                 minfo = tmpInfo;
+             }
+        });
+    }
+
+    jobjectArray infoArray = env->NewObjectArray(minfo.size(),
+            gRkConnectorInfo.clazz, NULL);
+
+    for (size_t c=0;c<minfo.size();c++) {
+        RkConnectorInfo tmpConnectorInfo = minfo[c];
+        jobject infoObj = env->NewObject(gRkConnectorInfo.clazz,
+                gRkConnectorInfo.ctor);
+        env->SetIntField(infoObj, gRkConnectorInfo.type, tmpConnectorInfo.type);
+        env->SetIntField(infoObj, gRkConnectorInfo.id, tmpConnectorInfo.id);
+        env->SetIntField(infoObj, gRkConnectorInfo.state, tmpConnectorInfo.state);
+
+        env->SetObjectArrayElement(infoArray, static_cast<jsize>(c), infoObj);
+        env->DeleteLocalRef(infoObj);
+    }
+    return infoArray;
+}
+
 static void nativeUpdateConnectors(JNIEnv* env, jobject obj) {
     ALOGD("nativeInit failed to get IRkOutputManager");
     if (mComposer != nullptr)
@@ -483,6 +520,17 @@ static void nativeInit(JNIEnv* env, jobject obj) {
         } else {
             ALOGD("nativeInit failed to get IRkOutputManager");
         }
+}
+
+static int nativeUpdateDispHeader(JNIEnv* env, jobject obj) {
+    Result res = Result::UNKNOWN;
+    if (mComposer != nullptr)
+        res = mComposer->updateDispHeader();
+    if(res == Result::OK){
+        return 0;
+    }else {
+        return -1;
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -532,6 +580,10 @@ static const JNINativeMethod sRkDrmModeMethods[] = {
         (void*)nativeSetHdrMode},
     {"nativeSetColorMode", "(ILjava/lang/String;)I",
         (void*)nativeSetColorMode},
+    {"nativeGetConnectorInfo", "()[Lcom/android/server/rkdisplay/RkDisplayModes$RkConnectorInfo;",
+        (void*)nativeGetConnectorInfo},
+    {"nativeUpdateDispHeader", "()I",
+        (void*)nativeUpdateDispHeader},
 
 };
 
@@ -587,6 +639,15 @@ int register_com_android_server_rkdisplay_RkDisplayModes(JNIEnv* env)
             gRkColorModeSupportInfo.clazz, "<init>", "()V");
     GET_FIELD_ID(gRkColorModeSupportInfo.color_capa, gRkColorModeSupportInfo.clazz, "color_capa", "I");
     GET_FIELD_ID(gRkColorModeSupportInfo.depth_capa, gRkColorModeSupportInfo.clazz, "depth_capa", "I");
+
+    FIND_CLASS(gRkConnectorInfo.clazz, "com/android/server/rkdisplay/RkDisplayModes$RkConnectorInfo");
+    gRkConnectorInfo.clazz = jclass(env->NewGlobalRef(gRkConnectorInfo.clazz));
+    GET_METHOD_ID(gRkConnectorInfo.ctor,
+            gRkConnectorInfo.clazz, "<init>", "()V");
+    GET_FIELD_ID(gRkConnectorInfo.type, gRkConnectorInfo.clazz, "type", "I");
+    GET_FIELD_ID(gRkConnectorInfo.id, gRkConnectorInfo.clazz, "id", "I");
+    GET_FIELD_ID(gRkConnectorInfo.state, gRkConnectorInfo.clazz, "state", "I");
+
     return 0;
 }
 };

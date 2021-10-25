@@ -446,6 +446,7 @@
     <string name="power_charging" msgid="6727132649743436802">"<xliff:g id="LEVEL">%1$s</xliff:g> – <xliff:g id="STATE">%2$s</xliff:g>"</string>
     <string name="power_remaining_charging_duration_only" msgid="7415639699283965818">"<xliff:g id="TIME">%1$s</xliff:g> до полной зарядки"</string>
     <string name="power_charging_duration" msgid="5005740040558984057">"<xliff:g id="LEVEL">%1$s</xliff:g> – <xliff:g id="TIME">%2$s</xliff:g> до полной зарядки"</string>
+    <string name="power_charging_limited" msgid="1956874810658999681">"Оптимизация для увеличения срока службы батареи (<xliff:g id="LEVEL">%1$s</xliff:g>)"</string>
     <string name="battery_info_status_unknown" msgid="268625384868401114">"Неизвестно"</string>
     <string name="battery_info_status_charging" msgid="4279958015430387405">"Идет зарядка"</string>
     <string name="battery_info_status_charging_fast" msgid="8027559755902954885">"Быстрая зарядка"</string>
@@ -547,7 +548,7 @@
     <string name="user_need_lock_message" msgid="4311424336209509301">"Чтобы создать профиль с ограниченным доступом, необходимо предварительно настроить блокировку экрана для защиты приложений и личных данных"</string>
     <string name="user_set_lock_button" msgid="1427128184982594856">"Включить блокировку"</string>
     <string name="user_switch_to_user" msgid="6975428297154968543">"Переключиться на этот аккаунт: <xliff:g id="USER_NAME">%s</xliff:g>"</string>
-    <string name="guest_new_guest" msgid="3482026122932643557">"Добавить аккаунт гостя"</string>
+    <string name="guest_new_guest" msgid="3482026122932643557">"Добавить гостя"</string>
     <string name="guest_exit_guest" msgid="5908239569510734136">"Удалить аккаунт гостя"</string>
     <string name="guest_nickname" msgid="6332276931583337261">"Гость"</string>
     <string name="cached_apps_freezer_device_default" msgid="2616594131750144342">"Вариант по умолчанию"</string>

@@ -1494,6 +1494,16 @@ public class TelephonyManager {
     public static final int EXTRA_DEFAULT_SUBSCRIPTION_SELECT_TYPE_ALL = 4;
 
     /**
+     * Used as an int value for {@link #EXTRA_DEFAULT_SUBSCRIPTION_SELECT_TYPE}
+     * to indicate that default subscription for data/sms/voice is now determined, that
+     * it should dismiss any dialog or pop-ups that is asking user to select default sub.
+     * This is used when, for example, opportunistic subscription is configured. At that
+     * time the primary becomes default sub there's no need to ask user to select anymore.
+     * @hide
+     */
+    public static final int EXTRA_DEFAULT_SUBSCRIPTION_SELECT_TYPE_DISMISS = 5;
+
+    /**
      * Integer intent extra to be used with {@link #ACTION_PRIMARY_SUBSCRIPTION_LIST_CHANGED}
      * to indicate if the SIM combination in DSDS has limitation or compatible issue.
      * e.g. two CDMA SIMs may disrupt each other's voice call in certain scenarios.
@@ -8524,6 +8534,9 @@ public class TelephonyManager {
      * call will return true. This access is granted by the owner of the UICC
      * card and does not depend on the registered carrier.
      *
+     * Note that this API applies to both physical and embedded subscriptions and
+     * is a superset of the checks done in SubscriptionManager#canManageSubscription.
+     *
      * @return true if the app has carrier privileges.
      */
     public boolean hasCarrierPrivileges() {
@@ -8536,6 +8549,9 @@ public class TelephonyManager {
      * If any of the packages in the calling UID has carrier privileges, the
      * call will return true. This access is granted by the owner of the UICC
      * card and does not depend on the registered carrier.
+     *
+     * Note that this API applies to both physical and embedded subscriptions and
+     * is a superset of the checks done in SubscriptionManager#canManageSubscription.
      *
      * @param subId The subscription to use.
      * @return true if the app has carrier privileges.

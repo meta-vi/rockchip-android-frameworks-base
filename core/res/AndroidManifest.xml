@@ -115,6 +115,12 @@
     <protected-broadcast android:name="android.app.action.EXIT_DESK_MODE" />
     <protected-broadcast android:name="android.app.action.NEXT_ALARM_CLOCK_CHANGED" />
 
+    <protected-broadcast android:name="android.app.action.USER_ADDED" />
+    <protected-broadcast android:name="android.app.action.USER_REMOVED" />
+    <protected-broadcast android:name="android.app.action.USER_STARTED" />
+    <protected-broadcast android:name="android.app.action.USER_STOPPED" />
+    <protected-broadcast android:name="android.app.action.USER_SWITCHED" />
+
     <protected-broadcast android:name="android.app.action.BUGREPORT_SHARING_DECLINED" />
     <protected-broadcast android:name="android.app.action.BUGREPORT_FAILED" />
     <protected-broadcast android:name="android.app.action.BUGREPORT_SHARE" />
@@ -377,6 +383,7 @@
     <protected-broadcast android:name="android.net.wifi.action.PASSPOINT_OSU_PROVIDERS_LIST" />
     <protected-broadcast android:name="android.net.wifi.action.PASSPOINT_SUBSCRIPTION_REMEDIATION" />
     <protected-broadcast android:name="android.net.wifi.action.PASSPOINT_LAUNCH_OSU_VIEW" />
+    <protected-broadcast android:name="android.net.wifi.action.REFRESH_USER_PROVISIONING" />
     <protected-broadcast android:name="android.net.wifi.action.WIFI_NETWORK_SUGGESTION_POST_CONNECTION" />
     <protected-broadcast android:name="android.net.wifi.action.WIFI_SCAN_AVAILABILITY_CHANGED" />
     <protected-broadcast android:name="android.net.wifi.supplicant.CONNECTION_CHANGE" />
@@ -389,6 +396,8 @@
     <protected-broadcast android:name="android.net.wifi.p2p.action.WIFI_P2P_PERSISTENT_GROUPS_CHANGED" />
     <protected-broadcast android:name="android.net.conn.TETHER_STATE_CHANGED" />
     <protected-broadcast android:name="android.net.conn.INET_CONDITION_ACTION" />
+    <!-- This broadcast is no longer sent in S but it should stay protected to avoid third party
+         apps broadcasting this and confusing old system apps that may not have been updated. -->
     <protected-broadcast android:name="android.net.conn.NETWORK_CONDITIONS_MEASURED" />
     <protected-broadcast
             android:name="android.net.ConnectivityService.action.PKT_CNT_SAMPLE_INTERVAL_ELAPSED" />
@@ -481,6 +490,8 @@
     <protected-broadcast android:name="android.app.action.ACTION_PASSWORD_FAILED" />
     <protected-broadcast android:name="android.app.action.ACTION_PASSWORD_SUCCEEDED" />
     <protected-broadcast android:name="com.android.server.ACTION_EXPIRED_PASSWORD_NOTIFICATION" />
+    <protected-broadcast android:name="com.android.server.ACTION_PROFILE_OFF_DEADLINE" />
+    <protected-broadcast android:name="com.android.server.ACTION_TURN_PROFILE_ON_NOTIFICATION" />
 
     <protected-broadcast android:name="android.intent.action.MANAGED_PROFILE_ADDED" />
     <protected-broadcast android:name="android.intent.action.MANAGED_PROFILE_UNLOCKED" />
@@ -4294,6 +4305,10 @@
          @hide -->
     <permission android:name="android.permission.WRITE_DREAM_STATE"
         android:protectionLevel="signature|privileged" />
+
+    <!-- @hide Allows applications to read whether ambient display is suppressed. -->
+    <permission android:name="android.permission.READ_DREAM_SUPPRESSION"
+        android:protectionLevel="signature" />
 
     <!-- @SystemApi Allow an application to read and write the cache partition.
          @hide -->

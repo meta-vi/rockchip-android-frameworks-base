@@ -125,6 +125,7 @@ import android.app.ActivityThread;
 import android.app.AlarmManager;
 import android.app.AppGlobals;
 import android.app.AppOpsManager;
+import android.app.AppOpsManager.Mode;
 import android.app.BroadcastOptions;
 import android.app.IActivityManager;
 import android.app.IActivityTaskManager;
@@ -639,6 +640,11 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
      * Whether or not this device is a watch.
      */
     final boolean mIsWatch;
+
+    /**
+     * Whether or not this device is an automotive.
+     */
+    private final boolean mIsAutomotive;
 
     /**
      * Whether this device has the telephony feature.
@@ -2567,6 +2573,8 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
                 .hasSystemFeature(PackageManager.FEATURE_WATCH);
         mHasTelephonyFeature = mInjector.getPackageManager()
                 .hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
+        mIsAutomotive = mInjector.getPackageManager()
+                .hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
         mBackgroundHandler = BackgroundThread.getHandler();
 
         // Needed when mHasFeature == false, because it controls the certificate warning text.
@@ -6080,9 +6088,16 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
 
                 // Require authentication for the device or profile
                 if (userToLock == UserHandle.USER_ALL) {
-                    // Power off the display
-                    mInjector.powerManagerGoToSleep(SystemClock.uptimeMillis(),
-                            PowerManager.GO_TO_SLEEP_REASON_DEVICE_ADMIN, 0);
+                    if (mIsAutomotive) {
+                        if (VERBOSE_LOG) {
+                            Slog.v(LOG_TAG, "lockNow(): not powering off display on automotive"
+                                    + " build");
+                        }
+                    } else {
+                        // Power off the display
+                        mInjector.powerManagerGoToSleep(SystemClock.uptimeMillis(),
+                                PowerManager.GO_TO_SLEEP_REASON_DEVICE_ADMIN, 0);
+                    }
                     mInjector.getIWindowManager().lockNow(null);
                 } else {
                     mInjector.getTrustManager().setDeviceLockedForUser(userToLock, true);
@@ -12802,6 +12817,48 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
         public ComponentName getProfileOwnerAsUser(int userHandle) {
             return DevicePolicyManagerService.this.getProfileOwnerAsUser(userHandle);
         }
+
+        @Override
+        public boolean supportsResetOp(int op) {
+            return op == AppOpsManager.OP_INTERACT_ACROSS_PROFILES
+                    && LocalServices.getService(CrossProfileAppsInternal.class) != null;
+        }
+
+        @Override
+        public void resetOp(int op, String packageName, @UserIdInt int userId) {
+            if (op != AppOpsManager.OP_INTERACT_ACROSS_PROFILES) {
+                throw new IllegalArgumentException("Unsupported op for DPM reset: " + op);
+            }
+            LocalServices.getService(CrossProfileAppsInternal.class)
+                    .setInteractAcrossProfilesAppOp(
+                            packageName, findInteractAcrossProfilesResetMode(packageName), userId);
+        }
+
+        private @Mode int findInteractAcrossProfilesResetMode(String packageName) {
+            return getDefaultCrossProfilePackages().contains(packageName)
+                    ? AppOpsManager.MODE_ALLOWED
+                    : AppOpsManager.opToDefaultMode(AppOpsManager.OP_INTERACT_ACROSS_PROFILES);
+        }
+
+        public boolean isDeviceOrProfileOwnerInCallingUser(String packageName) {
+            return isDeviceOwnerInCallingUser(packageName)
+                    || isProfileOwnerInCallingUser(packageName);
+        }
+
+        private boolean isDeviceOwnerInCallingUser(String packageName) {
+            final ComponentName deviceOwnerInCallingUser =
+                    DevicePolicyManagerService.this.getDeviceOwnerComponent(
+                            /* callingUserOnly= */ true);
+            return deviceOwnerInCallingUser != null
+                    && packageName.equals(deviceOwnerInCallingUser.getPackageName());
+        }
+
+        private boolean isProfileOwnerInCallingUser(String packageName) {
+            final ComponentName profileOwnerInCallingUser =
+                    getProfileOwnerAsUser(UserHandle.getCallingUserId());
+            return profileOwnerInCallingUser != null
+                    && packageName.equals(profileOwnerInCallingUser.getPackageName());
+        }
     }
 
     private Intent createShowAdminSupportIntent(ComponentName admin, int userId) {
@@ -14424,15 +14481,17 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
         }
 
         enforceProfileOrDeviceOwner(admin);
-        synchronized (getLockObject()) {
-            try {
-                IBackupManager ibm = mInjector.getIBackupManager();
-                return ibm != null && ibm.isBackupServiceActive(
-                    mInjector.userHandleGetCallingUserId());
-            } catch (RemoteException e) {
-                throw new IllegalStateException("Failed requesting backup service state.", e);
+        final int userId = mInjector.userHandleGetCallingUserId();
+        return mInjector.binderWithCleanCallingIdentity(() -> {
+            synchronized (getLockObject()) {
+                try {
+                    IBackupManager ibm = mInjector.getIBackupManager();
+                    return ibm != null && ibm.isBackupServiceActive(userId);
+                } catch (RemoteException e) {
+                    throw new IllegalStateException("Failed requesting backup service state.", e);
+                }
             }
-        }
+        });
     }
 
     @Override

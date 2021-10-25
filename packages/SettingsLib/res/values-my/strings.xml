@@ -28,7 +28,7 @@
     <string name="wifi_disabled_network_failure" msgid="2660396183242399585">"IP ပြုပြင်ခြင်း မအောင်မြင်ပါ"</string>
     <string name="wifi_disabled_by_recommendation_provider" msgid="1302938248432705534">"ကွန်ရက်ချိတ်ဆက်မှု အားနည်းသည့်အတွက် ချိတ်ဆက်ထားခြင်း မရှိပါ"</string>
     <string name="wifi_disabled_wifi_failure" msgid="8819554899148331100">"WiFi ချိတ်ဆက်မှု မအောင်မြင်ပါ"</string>
-    <string name="wifi_disabled_password_failure" msgid="6892387079613226738">"စစ်မှန်ကြောင်းအတည်ပြုရန်၌ ပြသနာရှိခြင်း"</string>
+    <string name="wifi_disabled_password_failure" msgid="6892387079613226738">"အထောက်အထားစိစစ်မှု ပြဿနာ"</string>
     <string name="wifi_cant_connect" msgid="5718417542623056783">"ချိတ်ဆက်၍ မရပါ"</string>
     <string name="wifi_cant_connect_to_ap" msgid="3099667989279700135">"\'<xliff:g id="AP_NAME">%1$s</xliff:g>\' နှင့် ချိတ်ဆက်၍ မရပါ"</string>
     <string name="wifi_check_password_try_again" msgid="8817789642851605628">"စကားဝှက်ကို စစ်ဆေးပြီး ထပ်လုပ်ကြည့်ပါ"</string>
@@ -306,7 +306,7 @@
     <string name="adb_keys_warning_message" msgid="2968555274488101220">"သင် ယခင်က ခွင့်ပြုခဲ့သော ကွန်ပျူတာအားလုံးမှ ယူအက်စ်ဘီ အမှားစစ်ခွင့်ကို ရုတ်သိမ်းမည်လား ?"</string>
     <string name="dev_settings_warning_title" msgid="8251234890169074553">"တည်ဆောက်ပြုပြင်ရန်ဆက်တင်များကို အသုံးပြုခွင့်ပေးမည်လား?"</string>
     <string name="dev_settings_warning_message" msgid="37741686486073668">"ဤဆက်တင်းများကို တည်ဆောက်ပြုပြင်ရာတွင် သုံးရန်အတွက်သာ ရည်ရွယ်သည်။ ၎င်းတို့သည် သင်၏စက်နှင့် အပလီကေးရှင်းများကို ရပ်စေခြင်း သို့ လုပ်ဆောင်ချက်မမှန်ကန်ခြင်းများ ဖြစ်ပေါ်စေနိုင်သည်။"</string>
-    <string name="verify_apps_over_usb_title" msgid="6031809675604442636">"USB ဖြင့် အက်ပ်များကို အတည်ပြုစိစစ်ရန်"</string>
+    <string name="verify_apps_over_usb_title" msgid="6031809675604442636">"USB ဖြင့် အက်ပ်များစိစစ်ရန်"</string>
     <string name="verify_apps_over_usb_summary" msgid="1317933737581167839">"ADB/ADT မှတစ်ဆင့် ထည့်သွင်းသော အက်ပ်များ အန္တရာယ်ဖြစ်နိုင်ခြင်း ရှိမရှိ စစ်ဆေးသည်။"</string>
     <string name="bluetooth_show_devices_without_names_summary" msgid="780964354377854507">"အမည်မရှိသော (MAC လိပ်စာများသာပါသော) ဘလူးတုသ်စက်ပစ္စည်းများကို ပြသပါမည်"</string>
     <string name="bluetooth_disable_absolute_volume_summary" msgid="2006309932135547681">"ချိတ်ဆက်ထားသည့် ကိရိယာတွင် လက်မခံနိုင်လောက်အောင် ဆူညံ သို့မဟုတ် ထိန်းညှိမရနိုင်သော အသံပိုင်းပြဿနာ ရှိခဲ့လျှင် ဘလူးတုသ် ပကတိ အသံနှုန်းကို ပိတ်ပါ။"</string>
@@ -446,6 +446,7 @@
     <string name="power_charging" msgid="6727132649743436802">"<xliff:g id="LEVEL">%1$s</xliff:g> - <xliff:g id="STATE">%2$s</xliff:g>"</string>
     <string name="power_remaining_charging_duration_only" msgid="7415639699283965818">"အားပြည့်ရန် <xliff:g id="TIME">%1$s</xliff:g> ကျန်သည်"</string>
     <string name="power_charging_duration" msgid="5005740040558984057">"<xliff:g id="LEVEL">%1$s</xliff:g> - အားပြည့်ရန် <xliff:g id="TIME">%2$s</xliff:g> ကျန်သည်"</string>
+    <string name="power_charging_limited" msgid="1956874810658999681">"<xliff:g id="LEVEL">%1$s</xliff:g> - ဘက်ထရီအခြေအနေကို အကောင်းဆုံးဖြစ်အောင် လုပ်နေသည်"</string>
     <string name="battery_info_status_unknown" msgid="268625384868401114">"မသိ"</string>
     <string name="battery_info_status_charging" msgid="4279958015430387405">"အားသွင်းနေပါသည်"</string>
     <string name="battery_info_status_charging_fast" msgid="8027559755902954885">"အမြန် အားသွင်းနေသည်"</string>

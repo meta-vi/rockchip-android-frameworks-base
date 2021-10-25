@@ -20,6 +20,7 @@ import static android.Manifest.permission.DELETE_PACKAGES;
 import static android.Manifest.permission.INSTALL_PACKAGES;
 import static android.Manifest.permission.MANAGE_DEVICE_ADMINS;
 import static android.Manifest.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS;
+import static android.Manifest.permission.QUERY_ALL_PACKAGES;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.REQUEST_DELETE_PACKAGES;
 import static android.Manifest.permission.SET_HARMFUL_APP_WARNINGS;
@@ -28,6 +29,7 @@ import static android.app.AppOpsManager.MODE_ALLOWED;
 import static android.app.AppOpsManager.MODE_DEFAULT;
 import static android.app.AppOpsManager.MODE_IGNORED;
 import static android.content.Intent.ACTION_MAIN;
+import static android.content.Intent.CATEGORY_BROWSABLE;
 import static android.content.Intent.CATEGORY_DEFAULT;
 import static android.content.Intent.CATEGORY_HOME;
 import static android.content.Intent.EXTRA_LONG_VERSION_CODE;
@@ -35,6 +37,8 @@ import static android.content.Intent.EXTRA_PACKAGE_NAME;
 import static android.content.Intent.EXTRA_VERSION_CODE;
 import static android.content.pm.PackageManager.CERT_INPUT_RAW_X509;
 import static android.content.pm.PackageManager.CERT_INPUT_SHA256;
+import static android.content.Intent.CATEGORY_BROWSABLE;
+import static android.content.Intent.CATEGORY_DEFAULT;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED;
@@ -3678,8 +3682,6 @@ public class PackageManagerService extends IPackageManager.Stub
         PackageParser.readConfigUseRoundIcon(mContext.getResources());
 
         mServiceStartWithDelay = SystemClock.uptimeMillis() + (60 * 1000L);
-
-        Slog.i(TAG, "Fix for b/169414761 is applied");
     }
 
     /**
@@ -6198,6 +6200,10 @@ public class PackageManagerService extends IPackageManager.Stub
 
     @Override
     public List<String> getAllPackages() {
+        // Allow iorapd to call this method.
+        if (Binder.getCallingUid() != Process.IORAPD_UID) {
+            enforceSystemOrRootOrShell("getAllPackages is limited to privileged callers");
+        }
         final int callingUid = Binder.getCallingUid();
         final int callingUserId = UserHandle.getUserId(callingUid);
         synchronized (mLock) {
@@ -6476,14 +6482,10 @@ public class PackageManagerService extends IPackageManager.Stub
                     true /*allowDynamicSplits*/);
             Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
 
-            final boolean queryMayBeFiltered =
-                    UserHandle.getAppId(filterCallingUid) >= Process.FIRST_APPLICATION_UID
-                            && !resolveForStart;
-
             final ResolveInfo bestChoice =
                     chooseBestActivity(
                             intent, resolvedType, flags, privateResolveFlags, query, userId,
-                            queryMayBeFiltered);
+                            queryMayBeFiltered(filterCallingUid, resolveForStart));
             final boolean nonBrowserOnly =
                     (privateResolveFlags & PackageManagerInternal.RESOLVE_NON_BROWSER_ONLY) != 0;
             if (nonBrowserOnly && bestChoice != null && bestChoice.handleAllWebDataURI) {
@@ -6493,6 +6495,25 @@ public class PackageManagerService extends IPackageManager.Stub
         } finally {
             Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
         }
+    }
+
+    /**
+     * Returns whether the query may be filtered to packages which are visible to the caller.
+     * Filtering occurs except in the following cases:
+     * <ul>
+     *     <li>system processes
+     *     <li>applications granted {@link android.Manifest.permission#QUERY_ALL_PACKAGES}
+     *     <li>when querying to start an app
+     * </ul>
+     *
+     * @param filterCallingUid the UID of the calling application
+     * @param queryForStart whether query is to start an app
+     * @return whether filtering may occur
+     */
+    private boolean queryMayBeFiltered(int filterCallingUid, boolean queryForStart) {
+        return UserHandle.getAppId(filterCallingUid) >= Process.FIRST_APPLICATION_UID
+                && checkUidPermission(QUERY_ALL_PACKAGES, filterCallingUid) != PERMISSION_GRANTED
+                && !queryForStart;
     }
 
     @Override
@@ -6860,7 +6881,7 @@ public class PackageManagerService extends IPackageManager.Stub
             boolean removeMatches, boolean debug, int userId) {
         return findPreferredActivityNotLocked(
                 intent, resolvedType, flags, query, priority, always, removeMatches, debug, userId,
-                UserHandle.getAppId(Binder.getCallingUid()) >= Process.FIRST_APPLICATION_UID);
+                queryMayBeFiltered(Binder.getCallingUid(), /* queryForStart= */ false));
     }
 
     // TODO: handle preferred activities missing while user has amnesia
@@ -12324,7 +12345,8 @@ public class PackageManagerService extends IPackageManager.Stub
 
             // If the package is not on a system partition ensure it is signed with at least the
             // minimum signature scheme version required for its target SDK.
-            if ((parseFlags & PackageParser.PARSE_IS_SYSTEM_DIR) == 0) {
+            if ((parseFlags & PackageParser.PARSE_IS_SYSTEM_DIR) == 0
+                    && (parseFlags & PackageParser.PARSE_IS_PREBUNDLED_DIR) == 0) {
                 int minSignatureSchemeVersion =
                         ApkSignatureVerifier.getMinimumSignatureSchemeVersionForTargetSdk(
                                 pkg.getTargetSdkVersion());
@@ -12611,6 +12633,7 @@ public class PackageManagerService extends IPackageManager.Stub
                     if (hasOldPkg) {
                         mPermissionManager.revokeRuntimePermissionsIfGroupChanged(pkg, oldPkg,
                                 allPackageNames);
+                        mPermissionManager.revokeStoragePermissionsIfScopeExpanded(pkg, oldPkg);
                     }
                     if (hasPermissionDefinitionChanges) {
                         mPermissionManager.revokeRuntimePermissionsIfPermissionDefinitionChanged(
@@ -18302,6 +18325,19 @@ public class PackageManagerService extends IPackageManager.Stub
         final String packageName = versionedPackage.getPackageName();
         final long versionCode = versionedPackage.getLongVersionCode();
         final String internalPackageName;
+
+        try {
+            if (LocalServices.getService(ActivityTaskManagerInternal.class)
+                    .isBaseOfLockedTask(packageName)) {
+                observer.onPackageDeleted(
+                        packageName, PackageManager.DELETE_FAILED_APP_PINNED, null);
+                EventLog.writeEvent(0x534e4554, "127605586", -1, "");
+                return;
+            }
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+
         synchronized (mLock) {
             // Normalize package name to handle renamed packages and static libs
             internalPackageName = resolveInternalPackageNameLPr(packageName, versionCode);

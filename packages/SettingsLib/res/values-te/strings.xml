@@ -140,15 +140,15 @@
     <string name="accessibility_wifi_security_type_none" msgid="162352241518066966">"ఓపెన్ నెట్‌వర్క్"</string>
     <string name="accessibility_wifi_security_type_secured" msgid="2399774097343238942">"సురక్షిత నెట్‌వర్క్"</string>
     <string name="process_kernel_label" msgid="950292573930336765">"Android OS"</string>
-    <string name="data_usage_uninstalled_apps" msgid="1933665711856171491">"తీసివేయబడిన అనువర్తనాలు"</string>
-    <string name="data_usage_uninstalled_apps_users" msgid="5533981546921913295">"తీసివేయబడిన అనువర్తనాలు మరియు వినియోగదారులు"</string>
+    <string name="data_usage_uninstalled_apps" msgid="1933665711856171491">"తీసివేయబడిన యాప్‌లు"</string>
+    <string name="data_usage_uninstalled_apps_users" msgid="5533981546921913295">"తీసివేయబడిన యాప్‌లు మరియు వినియోగదారులు"</string>
     <string name="data_usage_ota" msgid="7984667793701597001">"సిస్టమ్ అప్‌డేట్‌లు"</string>
     <string name="tether_settings_title_usb" msgid="3728686573430917722">"USB టీథరింగ్"</string>
     <string name="tether_settings_title_wifi" msgid="4803402057533895526">"పోర్టబుల్ హాట్‌స్పాట్"</string>
     <string name="tether_settings_title_bluetooth" msgid="916519902721399656">"బ్లూటూత్ టెథెరింగ్"</string>
     <string name="tether_settings_title_usb_bluetooth" msgid="1727111807207577322">"టీథరింగ్"</string>
     <string name="tether_settings_title_all" msgid="8910259483383010470">"టీథరింగ్ &amp; పోర్టబుల్ హాట్‌స్పాట్"</string>
-    <string name="managed_user_title" msgid="449081789742645723">"అన్ని కార్యాలయ అనువర్తనాలు"</string>
+    <string name="managed_user_title" msgid="449081789742645723">"అన్ని కార్యాలయ యాప్‌లు"</string>
     <string name="user_guest" msgid="6939192779649870792">"అతిథి"</string>
     <string name="unknown" msgid="3544487229740637809">"తెలియదు"</string>
     <string name="running_process_item_user_label" msgid="3988506293099805796">"వినియోగదారు: <xliff:g id="USER_NAME">%1$s</xliff:g>"</string>
@@ -156,14 +156,14 @@
     <string name="launch_defaults_none" msgid="8049374306261262709">"ఆటోమేటిక్ ఆప్ష‌న్‌లు ఏవీ సెట్ చేయ‌‌లేదు"</string>
     <string name="tts_settings" msgid="8130616705989351312">"వచనం నుండి ప్రసంగం సెట్టింగ్‌లు"</string>
     <string name="tts_settings_title" msgid="7602210956640483039">"టెక్స్ట్-టు-స్పీచ్ అవుట్‌పుట్"</string>
-    <string name="tts_default_rate_title" msgid="3964187817364304022">"ప్రసంగం రేట్"</string>
+    <string name="tts_default_rate_title" msgid="3964187817364304022">"స్పీచ్ రేట్"</string>
     <string name="tts_default_rate_summary" msgid="3781937042151716987">"వచనాన్ని చదివి వినిపించాల్సిన వేగం"</string>
     <string name="tts_default_pitch_title" msgid="6988592215554485479">"పిచ్"</string>
     <string name="tts_default_pitch_summary" msgid="9132719475281551884">"సమన్వయం చేసిన ప్రసంగం యొక్క టోన్‌ను ప్రభావితం చేస్తుంది"</string>
     <string name="tts_default_lang_title" msgid="4698933575028098940">"భాష"</string>
     <string name="tts_lang_use_system" msgid="6312945299804012406">"సిస్టమ్ భాషను ఉపయోగించు"</string>
     <string name="tts_lang_not_selected" msgid="7927823081096056147">"భాష ఎంచుకోబడలేదు"</string>
-    <string name="tts_default_lang_summary" msgid="9042620014800063470">"చదవి వినిపించబడే వచనం కోసం భాష-నిర్దిష్ట వాయిస్‌ను సెట్ చేస్తుంది"</string>
+    <string name="tts_default_lang_summary" msgid="9042620014800063470">"టెక్స్ట్‌ను చదివి వినిపించేటప్పుడు, ఒక్కో భాషకు వాడాల్సిన నిర్దిష్ట వాయిస్‌ను సెట్ చేస్తుంది"</string>
     <string name="tts_play_example_title" msgid="1599468547216481684">"ఒక ఉదాహరణ వినండి"</string>
     <string name="tts_play_example_summary" msgid="634044730710636383">"ప్రసంగ సమన్వయం గురించి సంక్షిప్త ప్రదర్శనను ప్లే చేయి"</string>
     <string name="tts_install_data_title" msgid="1829942496472751703">"వాయిస్ డేటాను ఇన్‌స్టాల్ చేయి"</string>
@@ -196,7 +196,7 @@
     <string name="choose_profile" msgid="343803890897657450">"ప్రొఫైల్‌ను ఎంచుకోండి"</string>
     <string name="category_personal" msgid="6236798763159385225">"వ్యక్తిగతం"</string>
     <string name="category_work" msgid="4014193632325996115">"ఆఫీస్"</string>
-    <string name="development_settings_title" msgid="140296922921597393">"డెవలపర్ ఎంపికలు"</string>
+    <string name="development_settings_title" msgid="140296922921597393">"డెవలపర్ ఆప్షన్‌లు"</string>
     <string name="development_settings_enable" msgid="4285094651288242183">"డెవలపర్ ఎంపికలను ప్రారంభించండి"</string>
     <string name="development_settings_summary" msgid="8718917813868735095">"అనువర్తన అభివృద్ధి కోసం ఎంపికలను సెట్ చేయండి"</string>
     <string name="development_settings_not_available" msgid="355070198089140951">"ఈ వినియోగదారు కోసం డెవలపర్ ఎంపికలు అందుబాటులో లేవు"</string>
@@ -280,7 +280,7 @@
     <string name="private_dns_mode_provider" msgid="3619040641762557028">"ప్రైవేట్ DNS ప్రదాత హోస్ట్‌పేరు"</string>
     <string name="private_dns_mode_provider_hostname_hint" msgid="6564868953748514595">"DNS ప్రదాత యొక్క హోస్ట్‌పేరును నమోదు చేయండి"</string>
     <string name="private_dns_mode_provider_failure" msgid="8356259467861515108">"కనెక్ట్ చేయడం సాధ్యపడలేదు"</string>
-    <string name="wifi_display_certification_summary" msgid="8111151348106907513">"వైర్‌లెస్ ప్రదర్శన సర్టిఫికెట్ కోసం ఎంపికలను చూపు"</string>
+    <string name="wifi_display_certification_summary" msgid="8111151348106907513">"వైర్‌లెస్ డిస్‌ప్లే సర్టిఫికేషన్ ఆప్షన్‌లను చూపు"</string>
     <string name="wifi_verbose_logging_summary" msgid="4993823188807767892">"Wi‑Fi ఎంపికలో SSID RSSI ప్రకారం చూపబడే Wi‑Fi లాగింగ్ స్థాయిని పెంచండి"</string>
     <string name="wifi_scan_throttling_summary" msgid="2577105472017362814">"బ్యాటరీ శక్తి వినియోగాన్ని తగ్గించి &amp; నెట్‌వర్క్ పనితీరును మెరుగుపరుస్తుంది"</string>
     <string name="wifi_enhanced_mac_randomization_summary" msgid="1210663439867489931">"ఈ మోడ్ ఎనేబుల్ అయ్యాక, MAC ర్యాండమైజేషన్‌ను ఎనేబుల్ చేసిన నెట్‌వర్క్‌తో కనెక్ట్ అయ్యే ప్రతిసారీ ఈ పరికరం MAC అడ్రస్ మారవచ్చు."</string>
@@ -313,14 +313,14 @@
     <string name="bluetooth_enable_gabeldorsche_summary" msgid="2054730331770712629">"బ్లూటూత్ Gabeldorsche ఫీచర్ స్ట్యాక్‌ను ఎనేబుల్ చేస్తుంది."</string>
     <string name="enhanced_connectivity_summary" msgid="1576414159820676330">"మెరుగైన కనెక్టివిటీ ఫీచర్‌ను ఎనేబుల్ చేస్తుంది."</string>
     <string name="enable_terminal_title" msgid="3834790541986303654">"స్థానిక టెర్మినల్"</string>
-    <string name="enable_terminal_summary" msgid="2481074834856064500">"స్థానిక షెల్ ప్రాప్యతను అందించే టెర్మినల్ అనువర్తనాన్ని ప్రారంభించు"</string>
+    <string name="enable_terminal_summary" msgid="2481074834856064500">"స్థానిక షెల్ ప్రాప్యతను అందించే టెర్మినల్ యాప్‌ను ప్రారంభించు"</string>
     <string name="hdcp_checking_title" msgid="3155692785074095986">"HDCP తనిఖీ"</string>
     <string name="hdcp_checking_dialog_title" msgid="7691060297616217781">"HDCP తనిఖీ ప్రవర్తనను సెట్ చేయండి"</string>
     <string name="debug_debugging_category" msgid="535341063709248842">"డీబగ్గింగ్"</string>
     <string name="debug_app" msgid="8903350241392391766">"డీబగ్ యాప్‌ను ఎంచుకోండి"</string>
     <string name="debug_app_not_set" msgid="1934083001283807188">"డీబగ్ యాప్ సెట్ చేయబడలేదు"</string>
     <string name="debug_app_set" msgid="6599535090477753651">"డీబగ్గింగ్ యాప్: <xliff:g id="APP_NAME">%1$s</xliff:g>"</string>
-    <string name="select_application" msgid="2543228890535466325">"అనువర్తనాన్ని ఎంచుకోండి"</string>
+    <string name="select_application" msgid="2543228890535466325">"యాప్‌ను ఎంచుకోండి"</string>
     <string name="no_application" msgid="9038334538870247690">"ఏదీ వద్దు"</string>
     <string name="wait_for_debugger" msgid="7461199843335409809">"డీబగ్గర్ కోసం వేచి ఉండండి"</string>
     <string name="wait_for_debugger_summary" msgid="6846330006113363286">"డీబగ్ చేయబడిన యాప్ అమలు కావడానికి ముందు జోడించాల్సిన డీబగ్గర్ కోసం వేచి ఉంటుంది"</string>
@@ -366,7 +366,7 @@
     <string name="overlay_display_devices_title" msgid="5411894622334469607">"ప్రత్యామ్నాయ ప్రదర్శనలను అనుకరించండి"</string>
     <string name="debug_applications_category" msgid="5394089406638954196">"యాప్‌లు"</string>
     <string name="immediately_destroy_activities" msgid="1826287490705167403">"కార్యకలాపాలను ఉంచవద్దు"</string>
-    <string name="immediately_destroy_activities_summary" msgid="6289590341144557614">"ప్రతి కార్యకలాపాన్ని వినియోగదారు నిష్క్రమించిన వెంటనే తొలగించండి"</string>
+    <string name="immediately_destroy_activities_summary" msgid="6289590341144557614">"యూజర్ నిష్క్రమించాక పూర్తి యాక్టివిటీ తొలగింపు"</string>
     <string name="app_process_limit_title" msgid="8361367869453043007">"బ్యాక్‌గ్రౌండ్ ప్రాసెస్ పరిమితి"</string>
     <string name="show_all_anrs" msgid="9160563836616468726">"బ్యాక్‌గ్రౌండ్ ANRలను చూపు"</string>
     <string name="show_all_anrs_summary" msgid="8562788834431971392">"నేపథ్య యాప్‌ల కోసం యాప్ ప్రతిస్పందించడం లేదు అనే డైలాగ్‌ను చూపు"</string>
@@ -388,7 +388,7 @@
   <string-array name="color_mode_names">
     <item msgid="3836559907767149216">"సచేతనం (డిఫాల్ట్)"</item>
     <item msgid="9112200311983078311">"సహజం"</item>
-    <item msgid="6564241960833766170">"ప్రామాణికం"</item>
+    <item msgid="6564241960833766170">"స్టాండర్డ్"</item>
   </string-array>
   <string-array name="color_mode_descriptions">
     <item msgid="6828141153199944847">"మెరుగైన రంగులు"</item>
@@ -446,6 +446,7 @@
     <string name="power_charging" msgid="6727132649743436802">"<xliff:g id="LEVEL">%1$s</xliff:g> - <xliff:g id="STATE">%2$s</xliff:g>"</string>
     <string name="power_remaining_charging_duration_only" msgid="7415639699283965818">"ఛార్జ్ అవ్వడానికి <xliff:g id="TIME">%1$s</xliff:g> సమయం మిగిలి ఉంది"</string>
     <string name="power_charging_duration" msgid="5005740040558984057">"<xliff:g id="LEVEL">%1$s</xliff:g> - ఛార్జ్ అవ్వడానికి <xliff:g id="TIME">%2$s</xliff:g> పడుతుంది"</string>
+    <string name="power_charging_limited" msgid="1956874810658999681">"<xliff:g id="LEVEL">%1$s</xliff:g> - బ్యాటరీ జీవితకాలాన్ని పెంచడం కోసం ఆప్టిమైజ్ చేస్తోంది"</string>
     <string name="battery_info_status_unknown" msgid="268625384868401114">"తెలియదు"</string>
     <string name="battery_info_status_charging" msgid="4279958015430387405">"ఛార్జ్ అవుతోంది"</string>
     <string name="battery_info_status_charging_fast" msgid="8027559755902954885">"వేగవంతమైన ఛార్జింగ్"</string>
@@ -472,7 +473,7 @@
     <string name="screen_zoom_summary_very_large" msgid="7317423942896999029">"చాలా పెద్దగా"</string>
     <string name="screen_zoom_summary_extremely_large" msgid="1438045624562358554">"అతి పెద్దగా"</string>
     <string name="screen_zoom_summary_custom" msgid="3468154096832912210">"అనుకూలం (<xliff:g id="DENSITYDPI">%d</xliff:g>)"</string>
-    <string name="content_description_menu_button" msgid="6254844309171779931">"మెను"</string>
+    <string name="content_description_menu_button" msgid="6254844309171779931">"మెనూ"</string>
     <string name="retail_demo_reset_message" msgid="5392824901108195463">"డెమో మోడ్‌లో ఫ్యాక్టరీ రీసెట్‌ను నిర్వహించడానికి పాస్‌వర్డ్‌ను నమోదు చేయండి"</string>
     <string name="retail_demo_reset_next" msgid="3688129033843885362">"తర్వాత"</string>
     <string name="retail_demo_reset_title" msgid="1866911701095959800">"పాస్‌వర్డ్ అవసరం"</string>
@@ -542,10 +543,10 @@
     <string name="user_new_profile_name" msgid="2405500423304678841">"కొత్త ప్రొఫైల్"</string>
     <string name="user_info_settings_title" msgid="6351390762733279907">"వినియోగదారు సమాచారం"</string>
     <string name="profile_info_settings_title" msgid="105699672534365099">"ప్రొఫైల్ సమాచారం"</string>
-    <string name="user_need_lock_message" msgid="4311424336209509301">"మీరు పరిమితం చేయబడిన ప్రొఫైల్‌ను సృష్టించడానికి ముందు, మీ అనువర్తనాలు మరియు వ్యక్తిగత డేటాను రక్షించడానికి స్క్రీన్ లాక్‌ను సెటప్ చేయాల్సి ఉంటుంది."</string>
+    <string name="user_need_lock_message" msgid="4311424336209509301">"మీరు పరిమితం చేయబడిన ప్రొఫైల్‌ను సృష్టించడానికి ముందు, మీ యాప్‌లు మరియు వ్యక్తిగత డేటాను రక్షించడానికి స్క్రీన్ లాక్‌ను సెటప్ చేయాల్సి ఉంటుంది."</string>
     <string name="user_set_lock_button" msgid="1427128184982594856">"లాక్‌ను సెట్ చేయి"</string>
     <string name="user_switch_to_user" msgid="6975428297154968543">"<xliff:g id="USER_NAME">%s</xliff:g>కు మార్చు"</string>
-    <string name="guest_new_guest" msgid="3482026122932643557">"అతిథిని జోడించండి"</string>
+    <string name="guest_new_guest" msgid="3482026122932643557">"గెస్ట్‌ను జోడించండి"</string>
     <string name="guest_exit_guest" msgid="5908239569510734136">"అతిథిని తీసివేయండి"</string>
     <string name="guest_nickname" msgid="6332276931583337261">"అతిథి"</string>
     <string name="cached_apps_freezer_device_default" msgid="2616594131750144342">"పరికర ఆటోమేటిక్ సెట్టింగ్"</string>

@@ -1959,8 +1959,16 @@ public class CarrierConfigManager {
             "allow_hold_call_during_emergency_bool";
 
     /**
-     * Flag indicating whether the carrier supports RCS presence indication for
-     * User Capability Exchange (UCE).  When presence is supported, the device should use the
+     * Flag indicating whether or not the carrier supports the periodic exchange of phone numbers
+     * in the user's address book with the carrier's presence server in order to retrieve the RCS
+     * capabilities for each contact used in the RCS User Capability Exchange (UCE) procedure. See
+     * RCC.71, section 3 for more information.
+     * <p>
+     * The flag {@code Ims#KEY_ENABLE_PRESENCE_PUBLISH_BOOL} must also be enabled if this flag is
+     * enabled, as sending a periodic SIP PUBLISH with this device's RCS capabilities is a
+     * requirement for capability exchange to begin.
+     * <p>
+     * When presence is supported, the device should use the
      * {@link android.provider.ContactsContract.Data#CARRIER_PRESENCE} bit mask and set the
      * {@link android.provider.ContactsContract.Data#CARRIER_PRESENCE_VT_CAPABLE} bit to indicate
      * whether each contact supports video calling.  The UI is made aware that presence is enabled
@@ -3767,11 +3775,26 @@ public class CarrierConfigManager {
         public static final String KEY_WIFI_OFF_DEFERRING_TIME_MILLIS_INT =
                 KEY_PREFIX + "wifi_off_deferring_time_millis_int";
 
+        /**
+         * A boolean flag specifying whether or not this carrier supports the device notifying the
+         * network of its RCS capabilities using the SIP PUBLISH procedure defined for User
+         * Capability Exchange (UCE). See RCC.71, section 3 for more information.
+         * <p>
+         * If this key's value is set to false, the procedure for RCS contact capability exchange
+         * via SIP SUBSCRIBE/NOTIFY will also be disabled internally, and
+         * {@link #KEY_USE_RCS_PRESENCE_BOOL} must also be set to false to ensure apps do not
+         * improperly think that capability exchange via SIP PUBLISH is enabled.
+         * <p> The default value for this key is {@code false}.
+         * @hide
+         */
+        public static final String KEY_ENABLE_PRESENCE_PUBLISH_BOOL =
+                KEY_PREFIX + "enable_presence_publish_bool";
         private Ims() {}
 
         private static PersistableBundle getDefaults() {
             PersistableBundle defaults = new PersistableBundle();
             defaults.putInt(KEY_WIFI_OFF_DEFERRING_TIME_MILLIS_INT, 4000);
+            defaults.putBoolean(KEY_ENABLE_PRESENCE_PUBLISH_BOOL, false);
             return defaults;
         }
     }
@@ -3904,6 +3927,20 @@ public class CarrierConfigManager {
      */
     public static final String KEY_USE_LOWER_MTU_VALUE_IF_BOTH_RECEIVED =
             "use_lower_mtu_value_if_both_received";
+
+    /**
+     * Indicates temporarily unmetered mobile data is supported by the carrier.
+     * @hide
+     */
+    public static final String KEY_NETWORK_TEMP_NOT_METERED_SUPPORTED_BOOL =
+            "network_temp_not_metered_supported_bool";
+
+    /**
+     * Indicates whether RTT is supported while roaming.
+     * @hide
+     */
+    public static final String KEY_RTT_SUPPORTED_WHILE_ROAMING_BOOL =
+            "rtt_supported_while_roaming_bool";
 
     /** The default value for every variable. */
     private final static PersistableBundle sDefaults;
@@ -4260,6 +4297,7 @@ public class CarrierConfigManager {
         sDefaults.putBoolean(KEY_RTT_SUPPORTED_BOOL, false);
         sDefaults.putBoolean(KEY_TTY_SUPPORTED_BOOL, true);
         sDefaults.putBoolean(KEY_HIDE_TTY_HCO_VCO_WITH_RTT_BOOL, false);
+        sDefaults.putBoolean(KEY_RTT_SUPPORTED_WHILE_ROAMING_BOOL, false);
         sDefaults.putBoolean(KEY_DISABLE_CHARGE_INDICATION_BOOL, false);
         sDefaults.putBoolean(KEY_SUPPORT_NO_REPLY_TIMER_FOR_CFNRY_BOOL, true);
         sDefaults.putStringArray(KEY_FEATURE_ACCESS_CODES_STRING_ARRAY, null);
@@ -4420,7 +4458,7 @@ public class CarrierConfigManager {
                 });
         sDefaults.putBoolean(KEY_SUPPORT_WPS_OVER_IMS_BOOL, true);
         sDefaults.putAll(Ims.getDefaults());
-        sDefaults.putStringArray(KEY_CARRIER_CERTIFICATE_STRING_ARRAY, null);
+        sDefaults.putStringArray(KEY_CARRIER_CERTIFICATE_STRING_ARRAY, new String[0]);
         sDefaults.putIntArray(KEY_DISCONNECT_CAUSE_PLAY_BUSYTONE_INT_ARRAY,
                 new int[] {4 /* BUSY */});
         sDefaults.putBoolean(KEY_PREVENT_CLIR_ACTIVATION_AND_DEACTIVATION_CODE_BOOL, false);
@@ -4443,6 +4481,7 @@ public class CarrierConfigManager {
         sDefaults.putBoolean(KEY_DISABLE_DUN_APN_WHILE_ROAMING_WITH_PRESET_APN_BOOL, false);
         sDefaults.putString(KEY_DEFAULT_PREFERRED_APN_NAME_STRING, "");
         sDefaults.putBoolean(KEY_USE_LOWER_MTU_VALUE_IF_BOTH_RECEIVED, false);
+        sDefaults.putBoolean(KEY_NETWORK_TEMP_NOT_METERED_SUPPORTED_BOOL, true);
     }
 
     /**

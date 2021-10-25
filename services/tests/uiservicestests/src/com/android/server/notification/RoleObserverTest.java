@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.ActivityManager;
+import android.app.ActivityManagerInternal;
 import android.app.AppOpsManager;
 import android.app.IActivityManager;
 import android.app.IUriGrantsManager;
@@ -103,12 +104,14 @@ public class RoleObserverTest extends UiServiceTestCase {
     private InstanceIdSequence mNotificationInstanceIdSequence = new InstanceIdSequenceFake(
             1 << 30);
     private List<UserInfo> mUsers;
+    private InjectableSystemClock mSystemClock = new FakeSystemClock();
 
     private static class TestableNotificationManagerService extends NotificationManagerService {
         TestableNotificationManagerService(Context context,
                 NotificationRecordLogger logger,
+                InjectableSystemClock systemClock,
                 InstanceIdSequence notificationInstanceIdSequence) {
-            super(context, logger, notificationInstanceIdSequence);
+            super(context, logger, systemClock, notificationInstanceIdSequence);
         }
 
         @Override
@@ -136,7 +139,7 @@ public class RoleObserverTest extends UiServiceTestCase {
         when(mUm.getUsers()).thenReturn(mUsers);
 
         mService = new TestableNotificationManagerService(mContext, mNotificationRecordLogger,
-                mNotificationInstanceIdSequence);
+                mSystemClock, mNotificationInstanceIdSequence);
         mRoleObserver = mService.new RoleObserver(mRoleManager, mPm, mExecutor);
 
         try {
@@ -154,7 +157,8 @@ public class RoleObserverTest extends UiServiceTestCase {
                     mock(DevicePolicyManagerInternal.class), mock(IUriGrantsManager.class),
                     mock(UriGrantsManagerInternal.class),
                     mock(AppOpsManager.class), mUm, mock(NotificationHistoryManager.class),
-                    mock(StatsManager.class), mock(TelephonyManager.class));
+                    mock(StatsManager.class), mock(TelephonyManager.class),
+                    mock(ActivityManagerInternal.class));
         } catch (SecurityException e) {
             if (!e.getMessage().contains("Permission Denial: not allowed to send broadcast")) {
                 throw e;

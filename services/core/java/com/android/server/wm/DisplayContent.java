@@ -189,6 +189,8 @@ import android.view.IWindow;
 import android.view.InputChannel;
 import android.view.InputDevice;
 import android.view.InputWindowHandle;
+import android.view.InsetsSource;
+import android.view.InsetsState;
 import android.view.InsetsState.InternalInsetsType;
 import android.view.MagnificationSpec;
 import android.view.RemoteAnimationDefinition;
@@ -230,7 +232,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
+import android.os.SystemProperties;
 /**
  * Utility class for keeping track of the WindowStates and other pertinent contents of a
  * particular Display.
@@ -1512,6 +1514,13 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
         }
         final int rotation = rotationForActivityInDifferentOrientation(r);
         if (rotation == ROTATION_UNDEFINED) {
+            // The display rotation won't be changed by current top activity. The client side
+            // adjustments of previous rotated activity should be cleared earlier. Otherwise if
+            // the current top is in the same process, it may get the rotated state. The transform
+            // will be cleared later with transition callback to ensure smooth animation.
+            if (hasTopFixedRotationLaunchingApp()) {
+                mFixedRotationLaunchingApp.notifyFixedRotationTransform(false /* enabled */);
+            }
             return false;
         }
         if (!r.getParent().matchParentBounds()) {
@@ -1664,6 +1673,28 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
         if (controller != null && !mDisplayRotation.hasSeamlessRotatingWindow()) {
             controller.show();
             mFixedRotationAnimationController = null;
+        }
+    }
+
+    void notifyInsetsChanged(Consumer<WindowState> dispatchInsetsChanged) {
+        if (mFixedRotationLaunchingApp != null) {
+            // The insets state of fixed rotation app is a rotated copy. Make sure the visibilities
+            // of insets sources are consistent with the latest state.
+            final InsetsState rotatedState =
+                    mFixedRotationLaunchingApp.getFixedRotationTransformInsetsState();
+            if (rotatedState != null) {
+                final InsetsState state = mInsetsStateController.getRawInsetsState();
+                for (int i = 0; i < InsetsState.SIZE; i++) {
+                    final InsetsSource source = state.peekSource(i);
+                    if (source != null) {
+                        rotatedState.setSourceVisible(i, source.isVisible());
+                    }
+                }
+            }
+        }
+        forAllWindows(dispatchInsetsChanged, true /* traverseTopToBottom */);
+        if (mRemoteInsetsControlTarget != null) {
+            mRemoteInsetsControlTarget.notifyInsetsChanged();
         }
     }
 
@@ -3986,6 +4017,33 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
         mInsetsStateController.getImeSourceProvider().checkShowImePostLayout();
 
         mLastHasContent = mTmpApplySurfaceChangesTransactionState.displayHasContent;
+        if (SystemProperties.getBoolean("vendor.hwc.enable_display_configs", false)){
+           if (SystemProperties.get("ro.board.platform").equals("rk356x")) {
+              if (mDisplayInfo.type == Display.TYPE_INTERNAL) {
+                 int modeId = SystemProperties.getInt("sys.display-0.mode", 0);
+                 mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+              } else if(mDisplayInfo.type==Display.TYPE_EXTERNAL){
+                 int mPhysicalDisplayId = Integer.valueOf(mDisplayInfo.uniqueId.split(":")[1]);
+                 if (mPhysicalDisplayId==1){
+                     int modeId = SystemProperties.getInt("sys.display-1.mode", 0);
+                     mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+                 }
+                 if (mPhysicalDisplayId==2){
+                     int modeId = SystemProperties.getInt("sys.display-2.mode", 0);
+                     mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+                 }
+             }
+          }else {
+             if (mDisplayInfo.type == Display.TYPE_INTERNAL) {
+                 int modeId = SystemProperties.getInt("sys.display-0.mode", 0);
+                 mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+             } else if(mDisplayInfo.type==Display.TYPE_EXTERNAL){
+                 int modeId = SystemProperties.getInt("sys.display-1.mode", 0);
+                 mTmpApplySurfaceChangesTransactionState.preferredModeId = modeId;
+             }
+          }
+        }
+
         mWmService.mDisplayManagerInternal.setDisplayProperties(mDisplayId,
                 mLastHasContent,
                 mTmpApplySurfaceChangesTransactionState.preferredRefreshRate,
@@ -5709,7 +5767,8 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
                 return;
             }
 
-            if (animatingRecents != null && animatingRecents == mFixedRotationLaunchingApp) {
+            if (animatingRecents != null && animatingRecents == mFixedRotationLaunchingApp
+                    && animatingRecents.isVisible() && animatingRecents != topRunningActivity()) {
                 // The recents activity should be going to be invisible (switch to another app or
                 // return to original top). Only clear the top launching record without finishing
                 // the transform immediately because it won't affect display orientation. And before
@@ -5857,6 +5916,11 @@ class DisplayContent extends WindowContainer<DisplayContent.DisplayChildWindowCo
             } catch (RemoteException e) {
                 Slog.w(TAG, "Failed to deliver showInsets", e);
             }
+        }
+
+        @Override
+        public boolean getImeRequestedVisibility(@InternalInsetsType int type) {
+            return getInsetsStateController().getImeSourceProvider().isImeShowing();
         }
     }
 

@@ -1489,6 +1489,14 @@ public final class DisplayManagerService extends SystemService {
         }
     }
 
+    void setDisplayModeDirectorLoggingEnabled(boolean enabled) {
+        synchronized (mSyncRoot) {
+            if (mDisplayModeDirector != null) {
+                mDisplayModeDirector.setLoggingEnabled(enabled);
+            }
+        }
+    }
+
     void setAmbientColorTemperatureOverride(float cct) {
         if (mDisplayPowerController != null) {
             synchronized (mSyncRoot) {
@@ -1570,7 +1578,17 @@ public final class DisplayManagerService extends SystemService {
                     + device.getDisplayDeviceInfoLocked());
             return;
         }
-        display.configureDisplayLocked(t, device, info.state == Display.STATE_OFF);
+        if(SystemProperties.getBoolean("vendor.hwc.enable_display_configs", false)){
+          if(device.getDisplayDeviceInfoLocked().type==Display.TYPE_EXTERNAL){
+             LogicalDisplay externalDisplay = findLogicalDisplayForDeviceLocked(device);
+             device.setDesiredDisplayModeSpecsLocked(externalDisplay.getDesiredDisplayModeSpecsLocked());
+             display.configureDisplayLocked(t, device, info.state == Display.STATE_OFF/*,externalDisplay.getDesiredDisplayModeSpecsLocked()*/);
+          }else {
+             display.configureDisplayLocked(t, device, info.state == Display.STATE_OFF/*,null*/);
+          }
+        }else{
+          display.configureDisplayLocked(t, device, info.state == Display.STATE_OFF);
+        }
         final Optional<Integer> viewportType = getViewportType(info);
         if (viewportType.isPresent()) {
             populateViewportLocked(viewportType.get(), display.getDisplayIdLocked(), device, info);

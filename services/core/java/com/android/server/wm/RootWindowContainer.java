@@ -994,9 +994,6 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
             }
         }
 
-        // Remove all deferred displays stacks, tasks, and activities.
-        handleCompleteDeferredRemoval();
-
         forAllDisplays(dc -> {
             dc.getInputMonitor().updateInputWindowsLw(true /*force*/);
             dc.updateSystemGestureExclusion();
@@ -3265,7 +3262,7 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
             int numTaskContainers = display.getTaskDisplayAreaCount();
             for (int tdaNdx = 0; tdaNdx < numTaskContainers; tdaNdx++) {
                 final TaskDisplayArea taskDisplayArea = display.getTaskDisplayAreaAt(tdaNdx);
-                final int numStacks = display.getStackCount();
+                final int numStacks = taskDisplayArea.getStackCount();
                 for (int stackNdx = 0; stackNdx < numStacks; ++stackNdx) {
                     final ActivityStack stack = taskDisplayArea.getStackAt(stackNdx);
                     stack.finishVoiceTask(session);
@@ -3301,6 +3298,8 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
     }
 
     boolean allResumedActivitiesIdle() {
+        ActivityRecord focusedActivity = null;
+        int mode = 0;
         for (int displayNdx = getChildCount() - 1; displayNdx >= 0; --displayNdx) {
             // TODO(b/117135575): Check resumed activities on all visible stacks.
             final DisplayContent display = getChildAt(displayNdx);
@@ -3316,6 +3315,7 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
                 continue;
             }
             final ActivityRecord resumedActivity = stack.getResumedActivity();
+            focusedActivity = stack.getResumedActivity();
             if (resumedActivity == null || !resumedActivity.idle) {
                 if (DEBUG_STATES) {
                     Slog.d(TAG_STATES, "allResumedActivitiesIdle: stack="
@@ -3324,8 +3324,23 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
                 return false;
             }
         }
-        // Send launch end powerhint when idle
-        sendPowerHintForLaunchEndIfNeeded();
+        if (focusedActivity != null) {
+            try {
+                mode = AppGlobals.getPackageManager().getPackagePerformanceMode(
+                    focusedActivity.mActivityComponent.toString());
+            } catch (RemoteException e) {
+            }
+            Slog.v(TAG_TASKS, "getPackagePerformanceMode -- "
+                + focusedActivity.mActivityComponent.toString()
+                + " -- " + focusedActivity.packageName
+                + " -- mode=" + mode);
+        }
+        if (mode == 0) {
+            // Send launch end powerhint when idle
+            sendPowerHintForLaunchEndIfNeeded();
+        } else {
+            mPowerHintSent = false;
+        }
         return true;
     }
 
@@ -3375,7 +3390,7 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
     }
 
     /**
-     * Find all visible task stacks containing {@param userId} and intercept them with an activity
+     * Find all task stacks containing {@param userId} and intercept them with an activity
      * to block out the contents and possibly start a credential-confirming intent.
      *
      * @param userId user handle for the locked managed profile.
@@ -3383,39 +3398,15 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
     void lockAllProfileTasks(@UserIdInt int userId) {
         mService.deferWindowLayout();
         try {
-            final PooledConsumer c = PooledLambda.obtainConsumer(
-                    RootWindowContainer::taskTopActivityIsUser, this, PooledLambda.__(Task.class),
-                    userId);
-            forAllLeafTasks(c, true /* traverseTopToBottom */);
-            c.recycle();
+            forAllLeafTasks(task -> {
+                if (task.getActivity(activity -> !activity.finishing && activity.mUserId == userId)
+                        != null) {
+                    mService.getTaskChangeNotificationController().notifyTaskProfileLocked(
+                            task.mTaskId, userId);
+                }
+            }, true /* traverseTopToBottom */);
         } finally {
             mService.continueWindowLayout();
-        }
-    }
-
-    /**
-     * Detects whether we should show a lock screen in front of this task for a locked user.
-     * <p>
-     * We'll do this if either of the following holds:
-     * <ul>
-     *   <li>The top activity explicitly belongs to {@param userId}.</li>
-     *   <li>The top activity returns a result to an activity belonging to {@param userId}.</li>
-     * </ul>
-     *
-     * @return {@code true} if the top activity looks like it belongs to {@param userId}.
-     */
-    private void taskTopActivityIsUser(Task task, @UserIdInt int userId) {
-        // To handle the case that work app is in the task but just is not the top one.
-        final ActivityRecord activityRecord = task.getTopNonFinishingActivity();
-        final ActivityRecord resultTo = (activityRecord != null ? activityRecord.resultTo : null);
-
-        // Check the task for a top activity belonging to userId, or returning a
-        // result to an activity belonging to userId. Example case: a document
-        // picker for personal files, opened by a work app, should still get locked.
-        if ((activityRecord != null && activityRecord.mUserId == userId)
-                || (resultTo != null && resultTo.mUserId == userId)) {
-            mService.getTaskChangeNotificationController().notifyTaskProfileLocked(
-                    task.mTaskId, userId);
         }
     }
 
@@ -3560,10 +3551,6 @@ class RootWindowContainer extends WindowContainer<DisplayContent>
     void sendPowerHintForLaunchEndIfNeeded() {
         // Trigger launch power hint if activity is launched
         if (mPowerHintSent && mService.mPowerManagerInternal != null) {
-            if (mService.getFrontActivityPerformanceModeLocked() == 1){
-                mPowerHintSent = false;
-                return;
-            }
             mService.mPowerManagerInternal.powerHint(PowerHint.LAUNCH, 0);
             mPowerHintSent = false;
         }

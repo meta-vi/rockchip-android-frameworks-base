@@ -181,6 +181,7 @@
     <string name="accessibility_battery_two_bars" msgid="7895789999668425551">"Duas barras de bateria."</string>
     <string name="accessibility_battery_three_bars" msgid="118341923832368291">"Três barras de bateria."</string>
     <string name="accessibility_battery_full" msgid="1480463938961288494">"Bateria carregada."</string>
+    <string name="accessibility_battery_unknown" msgid="1807789554617976440">"Percentagem da bateria desconhecida."</string>
     <string name="accessibility_no_phone" msgid="8828412144430247025">"Sem telefone."</string>
     <string name="accessibility_phone_one_bar" msgid="8786055123727785588">"Uma barra de telefone."</string>
     <string name="accessibility_phone_two_bars" msgid="3316909612598670674">"Duas barras de telefone."</string>
@@ -475,9 +476,9 @@
     <string name="user_add_user" msgid="4336657383006913022">"Adicionar utilizador"</string>
     <string name="user_new_user_name" msgid="2019166282704195789">"Novo utilizador"</string>
     <string name="guest_exit_guest_dialog_title" msgid="5015697561580641422">"Remover o convidado?"</string>
-    <string name="guest_exit_guest_dialog_message" msgid="8183450985628495709">"Todas as aplicações e dados desta sessão serão eliminados."</string>
+    <string name="guest_exit_guest_dialog_message" msgid="8183450985628495709">"Todas as apps e dados desta sessão serão eliminados."</string>
     <string name="guest_exit_guest_dialog_remove" msgid="7505817591242703757">"Remover"</string>
-    <string name="guest_wipe_session_title" msgid="7147965814683990944">"Bem-vindo de volta, caro(a) convidado(a)!"</string>
+    <string name="guest_wipe_session_title" msgid="7147965814683990944">"Bem-vindo de volta, convidado!"</string>
     <string name="guest_wipe_session_message" msgid="3393823610257065457">"Pretende continuar a sessão?"</string>
     <string name="guest_wipe_session_wipe" msgid="8056836584445473309">"Recomeçar"</string>
     <string name="guest_wipe_session_dontwipe" msgid="3211052048269304205">"Sim, continuar"</string>
@@ -488,7 +489,7 @@
     <string name="user_logout_notification_text" msgid="7441286737342997991">"Terminar sessão do utilizador atual"</string>
     <string name="user_logout_notification_action" msgid="7974458760719361881">"TERMINAR SESSÃO DO UTILIZADOR"</string>
     <string name="user_add_user_title" msgid="4172327541504825032">"Adicionar um novo utilizador?"</string>
-    <string name="user_add_user_message_short" msgid="2599370307878014791">"Ao adicionar um novo utilizador, essa pessoa tem de configurar o respetivo espaço.\n\nQualquer utilizador pode atualizar aplicações para todos os outros utilizadores."</string>
+    <string name="user_add_user_message_short" msgid="2599370307878014791">"Ao adicionar um novo utilizador, essa pessoa tem de configurar o respetivo espaço.\n\nQualquer utilizador pode atualizar apps para todos os outros utilizadores."</string>
     <string name="user_limit_reached_title" msgid="2429229448830346057">"Limite de utilizadores alcançado"</string>
     <plurals name="user_limit_reached_message" formatted="false" msgid="2573535787802908398">
       <item quantity="other">Pode adicionar até <xliff:g id="COUNT">%d</xliff:g> utilizadores.</item>
@@ -563,9 +564,9 @@
     <string name="monitoring_description_vpn_settings" msgid="5264167033247632071">"Abrir as definições de VPN"</string>
     <string name="monitoring_description_ca_cert_settings_separator" msgid="7107390013344435439">" "</string>
     <string name="monitoring_description_ca_cert_settings" msgid="8329781950135541003">"Abrir credenciais fidedignas"</string>
-    <string name="monitoring_description_network_logging" msgid="577305979174002252">"O seu gestor ativou os registos de rede, que monitorizam o tráfego no seu dispositivo.\n\nPara obter mais informações, contacte o gestor."</string>
+    <string name="monitoring_description_network_logging" msgid="577305979174002252">"O seu gestor ativou os registos de rede, que monitorizam o tráfego no seu dispositivo.\n\nPara mais informações, contacte o gestor."</string>
     <string name="monitoring_description_vpn" msgid="1685428000684586870">"Concedeu autorização a uma app para configurar uma ligação VPN.\n\nEsta app pode monitorizar a atividade do dispositivo e da rede, incluindo emails, aplicações e Sites."</string>
-    <string name="monitoring_description_vpn_profile_owned" msgid="4964237035412372751">"O seu perfil de trabalho é gerido por <xliff:g id="ORGANIZATION">%1$s</xliff:g>.\n\nO seu gestor tem a capacidade de monitorizar a sua atividade da rede, incluindo emails, aplicações e Sites.\n\nPara obter mais informações, contacte o gestor.\n\nAlém disso, está ligado a uma VPN, que pode monitorizar a sua atividade da rede."</string>
+    <string name="monitoring_description_vpn_profile_owned" msgid="4964237035412372751">"O seu perfil de trabalho é gerido por <xliff:g id="ORGANIZATION">%1$s</xliff:g>.\n\nO seu gestor tem a capacidade de monitorizar a sua atividade da rede, incluindo emails, aplicações e Sites.\n\nPara mais informações, contacte o gestor.\n\nAlém disso, está ligado a uma VPN, que pode monitorizar a sua atividade da rede."</string>
     <string name="legacy_vpn_name" msgid="4174223520162559145">"VPN"</string>
     <string name="monitoring_description_app" msgid="376868879287922929">"Está associado à app <xliff:g id="APPLICATION">%1$s</xliff:g>, que pode monitorizar a sua atividade de rede, incluindo emails, aplicações e Sites."</string>
     <string name="monitoring_description_app_personal" msgid="1970094872688265987">"Está ligado a <xliff:g id="APPLICATION">%1$s</xliff:g>, que pode monitorizar a atividade da rede pessoal, incluindo emails, aplicações e Sites."</string>
@@ -1074,6 +1075,7 @@
     <string name="controls_seeding_in_progress" msgid="3033855341410264148">"A carregar recomendações…"</string>
     <string name="controls_media_title" msgid="1746947284862928133">"Multimédia"</string>
     <string name="controls_media_close_session" msgid="3957093425905475065">"Oculte a sessão atual."</string>
+    <string name="controls_media_active_session" msgid="1984383994625845642">"Não é possível ocultar a sessão atual."</string>
     <string name="controls_media_dismiss_button" msgid="9081375542265132213">"Ignorar"</string>
     <string name="controls_media_resume" msgid="1933520684481586053">"Retomar"</string>
     <string name="controls_media_settings_button" msgid="5815790345117172504">"Definições"</string>
@@ -1089,4 +1091,13 @@
     <string name="controls_added_tooltip" msgid="4842812921719153085">"Mantenha premido o botão ligar/desligar para ver os novos controlos."</string>
     <string name="controls_menu_add" msgid="4447246119229920050">"Adicionar controlos"</string>
     <string name="controls_menu_edit" msgid="890623986951347062">"Editar controlos"</string>
+    <string name="media_output_dialog_add_output" msgid="5642703238877329518">"Adicione saídas"</string>
+    <string name="media_output_dialog_group" msgid="5571251347877452212">"Grupo"</string>
+    <string name="media_output_dialog_single_device" msgid="3102758980643351058">"1 dispositivo selecionado"</string>
+    <string name="media_output_dialog_multiple_devices" msgid="1093771040315422350">"<xliff:g id="COUNT">%1$d</xliff:g> dispositivos selecionados"</string>
+    <string name="media_output_dialog_disconnected" msgid="1834473104836986046">"<xliff:g id="DEVICE_NAME">%1$s</xliff:g> (desligado)"</string>
+    <string name="media_output_dialog_connect_failed" msgid="3225190634236259010">"Não foi possível ligar. Tente novamente."</string>
+    <string name="media_output_dialog_pairing_new" msgid="9099497976087485862">"Sincronize o novo dispositivo"</string>
+    <string name="battery_state_unknown_notification_title" msgid="8464703640483773454">"Ocorreu um problema ao ler o medidor da bateria"</string>
+    <string name="battery_state_unknown_notification_text" msgid="13720937839460899">"Toque para obter mais informações"</string>
 </resources>

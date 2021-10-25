@@ -70,6 +70,7 @@ private const val DEBUG = true
 private const val DEFAULT_LUMINOSITY = 0.25f
 private const val LUMINOSITY_THRESHOLD = 0.05f
 private const val SATURATION_MULTIPLIER = 0.8f
+const val DEFAULT_COLOR = Color.DKGRAY
 
 private val LOADING = MediaData(-1, false, 0, null, null, null, null, null,
         emptyList(), emptyList(), "INVALID", null, null, null, true, null)
@@ -380,7 +381,7 @@ class MediaDataManager(
         } else {
             null
         }
-        val bgColor = artworkBitmap?.let { computeBackgroundColor(it) } ?: Color.DKGRAY
+        val bgColor = artworkBitmap?.let { computeBackgroundColor(it) } ?: DEFAULT_COLOR
 
         val mediaAction = getResumeMediaAction(resumeAction)
         foregroundExecutor.execute {
@@ -559,12 +560,14 @@ class MediaDataManager(
 
     private fun computeBackgroundColor(artworkBitmap: Bitmap?): Int {
         var color = Color.WHITE
-        if (artworkBitmap != null) {
-            // If we have art, get colors from that
+        if (artworkBitmap != null && artworkBitmap.width > 1 && artworkBitmap.height > 1) {
+            // If we have valid art, get colors from that
             val p = MediaNotificationProcessor.generateArtworkPaletteBuilder(artworkBitmap)
                     .generate()
             val swatch = MediaNotificationProcessor.findBackgroundSwatch(p)
             color = swatch.rgb
+        } else {
+            return DEFAULT_COLOR
         }
         // Adapt background color, so it's always subdued and text is legible
         val tmpHsl = floatArrayOf(0f, 0f, 0f)
@@ -609,7 +612,8 @@ class MediaDataManager(
             // Move to resume key (aka package name) if that key doesn't already exist.
             val resumeAction = getResumeMediaAction(removed.resumeAction!!)
             val updated = removed.copy(token = null, actions = listOf(resumeAction),
-                    actionsToShowInCompact = listOf(0), active = false, resumption = true)
+                    actionsToShowInCompact = listOf(0), active = false, resumption = true,
+                    isClearable = true)
             val pkg = removed?.packageName
             val migrate = mediaEntries.put(pkg, updated) == null
             // Notify listeners of "new" controls when migrating or removed and update when not

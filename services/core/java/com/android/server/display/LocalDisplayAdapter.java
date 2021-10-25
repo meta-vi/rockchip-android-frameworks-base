@@ -27,6 +27,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemProperties;
 import android.os.Trace;
+import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.Slog;
 import android.util.SparseArray;
@@ -178,6 +179,7 @@ final class LocalDisplayAdapter extends DisplayAdapter {
 
         private DisplayDeviceInfo mInfo;
         private boolean mHavePendingChanges;
+        private boolean mHaveModeChanges;
         private int mState = Display.STATE_UNKNOWN;
         private float mBrightnessState = PowerManager.BRIGHTNESS_INVALID_FLOAT;
         private int mDefaultModeId;
@@ -854,6 +856,18 @@ final class LocalDisplayAdapter extends DisplayAdapter {
             }
         }
 
+        public void performTraversalLocked(SurfaceControl.Transaction t) {
+          if(SystemProperties.getBoolean("vendor.hwc.enable_display_configs", false)){
+            if (mHaveModeChanges) {
+                SurfaceControl.DisplayConfig config = mDisplayConfigs[mActiveConfigId];
+                    //SurfaceControl.PhysicalDisplayInfo phys = mDisplayInfos[mActivePhysIndex];
+                Slog.d(TAG,"set size ="+config.width+"  "+config.height+" mActiveConfigId="+mActiveConfigId);
+                t.setDisplaySize(getDisplayTokenLocked(), config.width, config.height);
+            }
+            mHaveModeChanges=false;
+          }
+        }
+
         @Override
         public void onOverlayChangedLocked() {
             updateDeviceInfoLocked();
@@ -875,6 +889,8 @@ final class LocalDisplayAdapter extends DisplayAdapter {
             if (mActiveModeInvalid) {
                 Slog.w(TAG, "In unknown mode after setting allowed configs"
                         + ", activeConfigId=" + mActiveConfigId);
+            }else{
+                mHaveModeChanges=true;
             }
             return true;
         }
@@ -991,6 +1007,10 @@ final class LocalDisplayAdapter extends DisplayAdapter {
         }
 
         private int findMatchingModeIdLocked(int configId) {
+            if (configId < 0) {
+                Slog.w(TAG, "findMatchingModeIdLocked found configId is " + configId);
+                return NO_DISPLAY_MODE_ID;
+            }
             SurfaceControl.DisplayConfig config = mDisplayConfigs[configId];
             for (int i = 0; i < mSupportedModes.size(); i++) {
                 DisplayModeRecord record = mSupportedModes.valueAt(i);
