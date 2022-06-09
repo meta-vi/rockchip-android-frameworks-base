@@ -41,6 +41,10 @@ import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.RandomAccessFile;
+
 public class IpConfigStore {
     private static final String TAG = "IpConfigStore";
     private static final boolean DBG = false;
@@ -169,6 +173,7 @@ public class IpConfigStore {
         }
         out.writeUTF(EOS);
 
+        out.flush();
         return written;
     }
 
@@ -194,8 +199,28 @@ public class IpConfigStore {
             out.writeInt(IPCONFIG_FILE_VERSION);
             for(int i = 0; i < networks.size(); i++) {
                 writeConfig(out, networks.keyAt(i), networks.valueAt(i));
+                Log.v("ethernet","2 writeIpAndProxyConfigurations");
+                try{
+                    sync(filePath);
+                }catch (IOException e){
+                    Log.v("ethernet","2 sync error:"+e.toString());
+                }
             }
         });
+    }
+    
+    public void sync(String filepath) throws IOException {
+        File f = new File(filepath);
+        RandomAccessFile raf = null;
+        try {
+            raf = new RandomAccessFile(f, "r");
+            FileDescriptor fd = raf.getFD();
+            fd.sync();
+        } finally {
+            if (raf != null) {
+                raf.close();
+            }
+        }
     }
 
     public static ArrayMap<String, IpConfiguration> readIpConfigurations(String filePath) {
