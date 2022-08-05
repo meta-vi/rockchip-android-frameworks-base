@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.Surface.OutOfResourcesException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.io.InputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,6 +44,9 @@ public class RkDisplayModes {
     private static native int nativeSetColorMode(int display, String format);
     private static native RkDisplayModes.RkConnectorInfo[] nativeGetConnectorInfo();
     private static native int nativeUpdateDispHeader();
+    private static native String nativeGetModeState(String mode);
+    private static native int nativeSetModeState(String mode, String state);
+    private static native int nativeGetHdrResolutionSupported(int dpy, String hdrMode);
 
 
     private static RkDisplayModes.RkPhysicalDisplayInfo mDisplayInfos[];
@@ -122,8 +126,17 @@ public class RkDisplayModes {
     private  static String STR_DEPTH_8BIT = "8bit";
     private  static String STR_DEPTH_10BIT = "10bit";
 
+    public final int HDR10 = 1;
+    public final int DOLBY_VISION = 2;
+
     private static final  String RESOLUTION_XML_PATH = "/system/usr/share/resolution_white.xml";
     private final  String HDMI_DBG_STATUS = "/d/dw-hdmi/status";
+
+    private static final String PROP_SVEP = "persist.sys.svep.mode";
+    private static final String PROP_SVEP_LAB_MODE = "persist.sys.svep.lab_mode";
+    private static final String PROP_SVEP_CONTRAST_MODE = "persist.sys.svep.contrast_mode";
+    private static final String PROP_SVEP_CONTRAST_OFFSET_RATIO = "persist.sys.svep.contrast_offset_ratio";
+    private static final String PROP_HDR10_FORCE_DISABLE = "vendor.hwc.hdr_force_disable";
 
     public RkDisplayModes(){
         mWhiteList = new ArrayList<>();
@@ -222,13 +235,11 @@ public class RkDisplayModes {
                 builder.append(info.width).append("x").append(info.height);
                 if (info.interlaceFlag == true) {
                     builder.append("i");
-                    builder.append(String.format("%.2f", info.refreshRate));
+                    builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
                 } else {
                     builder.append("p");
-                    builder.append(String.format("%.2f", info.refreshRate));
+                    builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
                 }
-                //builder.append("@");
-                builder.append("-").append(info.idx);
 
                 boolean existingMode = false;
                 if (resolutions == null || IsResolutionNeedFilter(dpy)) {
@@ -471,7 +482,7 @@ public class RkDisplayModes {
         int ifaceType = ifacetotype(iface);
         String[] mode_str;
         int idx=0;
-        RkDisplayModes.RkPhysicalDisplayInfo info;
+        RkDisplayModes.RkPhysicalDisplayInfo info = null;
         Log.w(TAG, "setMode " + mode + " display " + display);
         if (mode.contains("Auto")) {
             nativeSetMode(display, ifaceType, mode);
@@ -481,31 +492,50 @@ public class RkDisplayModes {
             Log.e(TAG, "setMode split:  " + mval);
         }
 
-        if (mode_str.length != 2){
+        StringBuilder builder = new StringBuilder();
+        if (display == 0) {
+            for(int i = 0; i < mMainDisplayInfos.length; i++) {
+                builder.delete(0, builder.length());
+                builder.append(mMainDisplayInfos[i].width).append("x").append(mMainDisplayInfos[i].height);
+                if (mMainDisplayInfos[i].interlaceFlag == true) {
+                    builder.append("i");
+                    builder.append(String.format("%.2f", mMainDisplayInfos[i].refreshRate));
+                } else {
+                    builder.append("p");
+                    builder.append(String.format("%.2f", mMainDisplayInfos[i].refreshRate));
+                }
+                Log.d(TAG, "main mode = " + mode + ", builder = " + builder.toString());
+                if(mode.equals(builder.toString())) {
+                    info = mMainDisplayInfos[i];
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < mAuxDisplayInfos.length; i++) {
+                builder.delete(0, builder.length());
+                builder.append(mAuxDisplayInfos[i].width).append("x").append(mAuxDisplayInfos[i].height);
+                if (mAuxDisplayInfos[i].interlaceFlag == true) {
+                    builder.append("i");
+                    builder.append(String.format("%.2f", mAuxDisplayInfos[i].refreshRate));
+                } else {
+                    builder.append("p");
+                    builder.append(String.format("%.2f", mAuxDisplayInfos[i].refreshRate));
+                }
+                Log.d(TAG, "aux mode = " + mode + ", builder = " + builder.toString());
+                if (mode.equals(builder.toString())) {
+                    info = mAuxDisplayInfos[i];
+                    break;
+                }
+            }
+        }
+        if(info == null) {
             return;
         }
 
-        idx = Integer.parseInt(mode_str[1]);
-        if (mMainDisplayInfos!=null && idx >= mMainDisplayInfos.length && display==0)
-            idx=0;
-        else if (mAuxDisplayInfos!=null && idx >= mAuxDisplayInfos.length && display==1)
-            idx=0;
-
-        if (display == 0)
-            info = mMainDisplayInfos[idx];
-        else
-            info = mAuxDisplayInfos[idx];
-
-        StringBuilder builder = new StringBuilder();
+        builder.delete(0, builder.length());
         builder.append(info.width).append("x").append(info.height);
-/*
-        if (info.interlaceFlag == true)
-            builder.append("i");
-        else
-            builder.append("p");
-*/
         builder.append("@");
-        builder.append(String.format("%.2f", info.refreshRate));
+        builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
         builder.append("-");
         builder.append(info.hsync_start);
         builder.append("-");
@@ -514,7 +544,7 @@ public class RkDisplayModes {
         builder.append(info.htotal);
         builder.append("-");
         builder.append(info.vsync_start)
-        .append("-").append(info.vsync_end).append("-").append(info.vtotal).append("-").append(String.format("%x", info.flags)).append("-").append(info.clock);
+        .append("-").append(info.vsync_end).append("-").append(info.vtotal).append("-").append(String.format(Locale.ENGLISH, "%x", info.flags)).append("-").append(info.clock);
 
         nativeSetMode(display, ifaceType, builder.toString());
     }
@@ -559,7 +589,7 @@ public class RkDisplayModes {
                 String vfresh;
                 boolean isSameVfresh = false;
 
-                vfresh = String.format("%.2f", info.refreshRate);
+                vfresh = String.format(Locale.ENGLISH, "%.2f", info.refreshRate);
                 if (h_vfresh.length == 2)
                     isSameVfresh = vfresh.equals(h_vfresh[1]);
 
@@ -577,12 +607,11 @@ public class RkDisplayModes {
                     builder.append(info.width).append("x").append(info.height);
                     if (info.interlaceFlag == true) {
                         builder.append("i");
-                        builder.append(String.format("%.2f", info.refreshRate));
+                        builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
                     } else {
                         builder.append("p");
-                        builder.append(String.format("%.2f", info.refreshRate));
+                        builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
                     }
-                    builder.append("-").append(info.idx);
                     break;
                 }
             }
@@ -793,6 +822,54 @@ public class RkDisplayModes {
 
     public int updateDispHeader(){
         return nativeUpdateDispHeader();
+    }
+
+    public int getResolutionSupported(int display, String resolution) {
+        return nativeGetHdrResolutionSupported(display, resolution);
+}
+
+    public boolean isDolbyVisionStatus() {
+        Log.d(TAG, "isDolbyVisionStatus ===========  ");
+        return false;
+    }
+
+    public boolean setDolbyVisionEnabled(boolean enabled) {
+        nativeSetModeState("dolby vision", String.valueOf(enabled));
+        return false;
+    }
+
+    public boolean isHDR10Status() {
+        Log.d(TAG, "isHDR10Status ===========  ");
+        return nativeGetModeState(PROP_HDR10_FORCE_DISABLE).equals("0");
+    }
+
+    public boolean setHDR10Enabled(boolean enabled) {
+        Log.d(TAG, "setHDR10Enabled ===========  " + enabled);
+        return nativeSetModeState(PROP_HDR10_FORCE_DISABLE, enabled ? "0" : "1") == 0 ? true : false;
+    }
+
+    public boolean isAiImageQuality() {
+        String ret = nativeGetModeState(PROP_SVEP);
+        Log.d(TAG, "isAiImageQuality ===========  ret = " + ret);
+        return ret.equals("1");
+    }
+
+    public boolean setAiImageQuality(boolean enabled) {
+        int ret = nativeSetModeState(PROP_SVEP, enabled ? "1" : "0");
+        Log.d(TAG, "setAiImageQuality ===========  enabled = " + enabled + " ret = " + ret);
+        return ret == 0;
+    }
+
+    public boolean isAiImageQualityLabMode() {
+        String ret = nativeGetModeState(PROP_SVEP_LAB_MODE);
+        Log.d(TAG, "isAiImageQualityLabMode ===========  ret = " + ret);
+        return ret.equals("1");
+    }
+
+    public boolean setAiImageQualityLabMode(boolean enabled) {
+        int ret = nativeSetModeState(PROP_SVEP_LAB_MODE, enabled ? "1" : "0");
+        Log.d(TAG, "setAiImageQualityLabMode ===========  enabled = " + enabled + " ret = " + ret);
+        return ret == 0;
     }
 
 }
