@@ -2625,7 +2625,30 @@ public class OomAdjuster {
             }
         }
 
-        if (state.getCurAdj() != state.getSetAdj()) {
+        boolean isThirdPartyAppWhiteProcess =  false;
+        int mThirdPartyAdj = ProcessList.SYSTEM_ADJ;
+
+        for (int k = 0; k < mService.mWhitelistPackage.size(); k++) {
+            if(app.processName != null && app.processName.contains(mService.mWhitelistPackage.get(k))){
+                if (DEBUG_ALL)
+                    Slog.d(TAG,"Whitelist App= " + app.processName);
+                isThirdPartyAppWhiteProcess = true;
+                break;
+            }
+        }
+
+        if (isThirdPartyAppWhiteProcess) {
+            if (DEBUG_ALL)
+                Slog.d(TAG, "isThirdPartyAppWhiteProcess = true, mThirdPartyAdj = " + mThirdPartyAdj);
+            ProcessList.setOomAdj(app.getPid(), app.uid, mThirdPartyAdj);
+            if (DEBUG_SWITCH || DEBUG_OOM_ADJ || mService.mCurOomAdjUid == app.info.uid) {
+                String msg = "Set " + app.getPid() + " " + app.processName + " adj "
+                        + state.getCurAdj() + ": " + state.getAdjType();
+                reportOomAdjMessageLocked(TAG_OOM_ADJ, msg);
+            }
+            state.setSetAdj(mThirdPartyAdj);
+            state.setVerifiedAdj(ProcessList.INVALID_ADJ);
+        } else if (state.getCurAdj() != state.getSetAdj()) {
             ProcessList.setOomAdj(app.getPid(), app.uid, state.getCurAdj());
             if (DEBUG_SWITCH || DEBUG_OOM_ADJ || mService.mCurOomAdjUid == app.info.uid) {
                 String msg = "Set " + app.getPid() + " " + app.processName + " adj "

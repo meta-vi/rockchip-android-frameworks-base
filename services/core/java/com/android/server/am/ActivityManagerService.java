@@ -312,6 +312,7 @@ import android.util.SparseIntArray;
 import android.util.TimeUtils;
 import android.util.proto.ProtoOutputStream;
 import android.util.proto.ProtoUtils;
+import android.util.Xml;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -404,8 +405,13 @@ import dalvik.system.VMRuntime;
 
 import libcore.util.EmptyArray;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
+
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -1416,6 +1422,8 @@ public class ActivityManagerService extends IActivityManager.Stub
     final ActivityThread mSystemThread;
 
     final UidObserverController mUidObserverController;
+
+    final ArrayList<String> mWhitelistPackage = new ArrayList<String>();  // whitelist package which would not being killed
 
     private final class AppDeathRecipient implements IBinder.DeathRecipient {
         final ProcessRecord mApp;
@@ -4843,6 +4851,7 @@ public class ActivityManagerService extends IActivityManager.Stub
         if (callFinishBooting) {
             finishBooting();
         }
+        getWhitelistPackage();
     }
 
     final void ensureBootCompleted() {
@@ -17309,6 +17318,46 @@ public class ActivityManagerService extends IActivityManager.Stub
     static void traceBegin(long traceTag, String methodName, String subInfo) {
         if (Trace.isTagEnabled(traceTag)) {
             Trace.traceBegin(traceTag, methodName + subInfo);
+        }
+    }
+
+    final void getWhitelistPackage() {
+        File whiteListPackageFile = new File("dtoverlay/oom_whitelist_package.xml");
+        if (whiteListPackageFile.exists()) {
+            Slog.d(TAG, "getWhitelistPackage: whiteListPackageFile found");
+            try {
+                FileInputStream fis = new FileInputStream(whiteListPackageFile);
+                XmlPullParser xmlParser = Xml.newPullParser();
+                xmlParser.setInput(fis, null);
+
+                int xmlType;
+                do {
+                    xmlType = xmlParser.next();
+                    if (xmlType == XmlPullParser.START_TAG) {
+                        String xmlTag = xmlParser.getName();
+                        if ("whitelist".equals(xmlTag)) {
+                            String packageName = xmlParser.getAttributeValue(null, "package");
+                            Slog.d(TAG, "getWhitelistPackage: xml packageName: " + packageName);
+                            if (packageName != null) {
+                                mWhitelistPackage.add(packageName);
+                                Slog.d(TAG, "getWhitelistPackage: mWhitelistPackage.add: " + packageName);
+                            }
+                        }
+                    }
+                } while (xmlType != XmlPullParser.END_DOCUMENT);
+            } catch (NullPointerException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (NumberFormatException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (XmlPullParserException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (IOException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            } catch (IndexOutOfBoundsException e) {
+                Slog.w(TAG, "getWhitelistPackage: failed parsing " + whiteListPackageFile, e);
+            }
+        } else {
+            Slog.d(TAG, "getWhitelistPackage: whiteListPackageFile not found");
         }
     }
 }
