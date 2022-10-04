@@ -38,6 +38,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -102,6 +103,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -414,6 +416,14 @@ public class BugreportProgressService extends Service {
         @GuardedBy("mLock")
         private void sendBugreportFinishedBroadcastLocked() {
             final String bugreportFilePath = mInfo.bugreportFile.getAbsolutePath();
+            final File bugreportFile = new File(bugreportFilePath);
+            if (getScreenshotForIntent(mInfo) != null) {
+                final File screenshotFile = new File(getScreenshotForIntent(mInfo));
+                copyFileToLogs(mContext, bugreportFile, screenshotFile);
+            } else {
+                Log.e(TAG, "AsusDebugger get null screenshotFile!!");
+            }
+
             if (mInfo.type == BugreportParams.BUGREPORT_MODE_REMOTE) {
                 sendRemoteBugreportFinishedBroadcast(mContext, bugreportFilePath,
                         mInfo.bugreportFile, mInfo.nonce);
@@ -494,6 +504,39 @@ public class BugreportProgressService extends Service {
                 return null;
             }
         }.execute();
+    }
+
+    private static void copyFileToLogs(Context context, File report, File screenshot) {
+        String LOGS_PATH = "/sdcard/Logs/";
+        try {
+            if(!new File(LOGS_PATH).exists())
+                return;
+            if(report.isFile())
+                copyFileUsingFileStreams(report, new File(LOGS_PATH + report.getName()));
+            if(screenshot.isFile())
+                copyFileUsingFileStreams(screenshot, new File(LOGS_PATH + screenshot.getName()));
+        } catch (Exception e) {
+        }
+        Intent bIntent = new Intent();
+        bIntent.setComponent(new ComponentName("com.asus.debugger","com.asus.debugger.DebuggerIntentReceiver"));
+        bIntent.setAction("com.asus.debugger.intent_action.DUMPSTATE_DONE");
+        context.sendBroadcast(bIntent);
+    }
+
+    private static void copyFileUsingFileStreams(File source, File dest) throws IOException {
+        InputStream input = null;
+        OutputStream output = null;
+        try {
+            input = new FileInputStream(source);
+            output = new FileOutputStream(dest);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = input.read(buf)) > 0)
+                output.write(buf, 0, bytesRead);
+        } finally {
+            input.close();
+            output.close();
+        }
     }
 
     /**
