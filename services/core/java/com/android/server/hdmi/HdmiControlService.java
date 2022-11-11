@@ -567,9 +567,8 @@ public class HdmiControlService extends SystemService {
         }
         mPowerStatusController.setPowerStatus(getInitialPowerStatus());
         mProhibitMode = false;
-        //mHdmiControlEnabled = mHdmiCecConfig.getIntValue(
-        //        HdmiControlManager.CEC_SETTING_NAME_HDMI_CEC_ENABLED);
-        mHdmiControlEnabled = 0;
+        mHdmiControlEnabled = mHdmiCecConfig.getIntValue(
+                HdmiControlManager.CEC_SETTING_NAME_HDMI_CEC_ENABLED);
         setHdmiCecVolumeControlEnabledInternal(getHdmiCecConfig().getIntValue(
                 HdmiControlManager.CEC_SETTING_NAME_VOLUME_CONTROL_MODE));
         mMhlInputChangeEnabled = readBooleanSetting(Global.MHL_INPUT_SWITCHING_ENABLED, true);
