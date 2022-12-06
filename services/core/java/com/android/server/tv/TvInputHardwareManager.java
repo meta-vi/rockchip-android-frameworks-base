@@ -98,6 +98,7 @@ class TvInputHardwareManager implements TvInputHal.Callback {
     private final Map<String, TvInputInfo> mInputMap = new ArrayMap<>();
 
     private final AudioManager mAudioManager;
+    private final AudioStream mAudioStream;
     private final IHdmiHotplugEventListener mHdmiHotplugEventListener =
             new HdmiHotplugEventListener();
     private final IHdmiDeviceEventListener mHdmiDeviceEventListener = new HdmiDeviceEventListener();
@@ -124,6 +125,7 @@ class TvInputHardwareManager implements TvInputHal.Callback {
         mContext = context;
         mListener = listener;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        mAudioStream = new AudioStream(context);
         mHal.init();
     }
 
@@ -172,6 +174,16 @@ class TvInputHardwareManager implements TvInputHal.Callback {
         mHardwareList.clear();
         for (int i = 0; i < mConnections.size(); ++i) {
             mHardwareList.add(mConnections.valueAt(i).getHardwareInfoLocked());
+        }
+    }
+
+    private void EnableHDMIInAudio(boolean enable)
+    {
+        Slog.i(TAG, "EnableHDMIInAudio "+enable);
+        if (enable) {
+            mAudioStream.start(6);
+        } else {
+            mAudioStream.stop();
         }
     }
 
@@ -262,6 +274,9 @@ class TvInputHardwareManager implements TvInputHal.Callback {
     @Override
     public void onPrivCmdToApp(int deviceId, String action, Bundle data) {
         synchronized (mLock) {
+            if (action.equals("hdmiinout")) {
+                EnableHDMIInAudio(false);
+            }
             Connection connection = mConnections.get(deviceId);
             if (connection == null) {
                 Slog.e(TAG, "onPrivCmdToApp: Cannot find a connection with "
@@ -826,6 +841,7 @@ class TvInputHardwareManager implements TvInputHal.Callback {
             @Override
             public void onServiceDied() {
                 synchronized (mImplLock) {
+                    EnableHDMIInAudio(false);
                     mAudioSource = null;
                     mAudioSink.clear();
                     if (mAudioPatch != null) {
@@ -922,6 +938,7 @@ class TvInputHardwareManager implements TvInputHal.Callback {
                     // The value of config is ignored when surface == null.
                     if (mActiveConfig != null) {
                         result = mHal.removeStream(mInfo.getDeviceId(), mActiveConfig);
+                        EnableHDMIInAudio(false);
                         mActiveConfig = null;
                     } else {
                         // We already have no active stream.
@@ -943,6 +960,7 @@ class TvInputHardwareManager implements TvInputHal.Callback {
                     if (result == TvInputHal.SUCCESS) {
                         result = mHal.addOrUpdateStream(mInfo.getDeviceId(), surface, config);
                         if (result == TvInputHal.SUCCESS) {
+                            EnableHDMIInAudio(true);
                             mActiveConfig = config;
                         }
                     }

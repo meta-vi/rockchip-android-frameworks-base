@@ -50,13 +50,9 @@ public class RkDisplayModes {
 
 
     private static RkDisplayModes.RkPhysicalDisplayInfo mDisplayInfos[];
-    private static RkDisplayModes.RkPhysicalDisplayInfo mMainDisplayInfos[];
-    private static RkDisplayModes.RkPhysicalDisplayInfo mAuxDisplayInfos[];
     private static List<String> mWhiteList;
     private static List<ResolutionParser.RkResolutionInfo> resolutions=null;
     private static ResolutionParser mParser=null;
-    private static RkDisplayModes.RkColorCapacityInfo mMainColorInfos;
-    private static RkDisplayModes.RkColorCapacityInfo mAuxColorInfos;
 
     public final int DRM_MODE_CONNECTOR_Unknown = 0;
     public final int DRM_MODE_CONNECTOR_VGA = 1;
@@ -221,10 +217,6 @@ public class RkDisplayModes {
         Log.e(TAG, "getModeList =========== dpy " + dpy);
         //readModeWhiteList(RESOLUTION_XML_PATH);
         mDisplayInfos = getDisplayConfigs(dpy);
-        if (dpy == 0)
-            mMainDisplayInfos = mDisplayInfos;
-        else
-            mAuxDisplayInfos = mDisplayInfos;
 
         if (mDisplayInfos != null) {
             modeList.add("Auto");
@@ -240,6 +232,8 @@ public class RkDisplayModes {
                     builder.append("p");
                     builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
                 }
+                //builder.append("@");
+                builder.append("-").append(info.idx);
 
                 boolean existingMode = false;
                 if (resolutions == null || IsResolutionNeedFilter(dpy)) {
@@ -493,47 +487,44 @@ public class RkDisplayModes {
         }
 
         StringBuilder builder = new StringBuilder();
-        if (display == 0) {
-            for(int i = 0; i < mMainDisplayInfos.length; i++) {
+        RkDisplayModes.RkPhysicalDisplayInfo mCurDisplayInfos[];
+        mCurDisplayInfos = getDisplayConfigs(display);
+
+        if (mode_str.length != 2){
+            for(int i = 0; i < mCurDisplayInfos.length; i++) {
                 builder.delete(0, builder.length());
-                builder.append(mMainDisplayInfos[i].width).append("x").append(mMainDisplayInfos[i].height);
-                if (mMainDisplayInfos[i].interlaceFlag == true) {
+                builder.append(mCurDisplayInfos[i].width).append("x").append(mCurDisplayInfos[i].height);
+                if(mCurDisplayInfos[i].interlaceFlag) {
                     builder.append("i");
-                    builder.append(String.format("%.2f", mMainDisplayInfos[i].refreshRate));
                 } else {
                     builder.append("p");
-                    builder.append(String.format("%.2f", mMainDisplayInfos[i].refreshRate));
                 }
-                Log.d(TAG, "main mode = " + mode + ", builder = " + builder.toString());
+                builder.append(String.format(Locale.getDefault(), "%.2f", mCurDisplayInfos[i].refreshRate));
+                Log.i(TAG, "mCurMode = " + mode + ", builder = " + builder.toString());
                 if(mode.equals(builder.toString())) {
-                    info = mMainDisplayInfos[i];
-                    break;
+                    info = mCurDisplayInfos[i];
                 }
             }
         } else {
-            for (int i = 0; i < mAuxDisplayInfos.length; i++) {
-                builder.delete(0, builder.length());
-                builder.append(mAuxDisplayInfos[i].width).append("x").append(mAuxDisplayInfos[i].height);
-                if (mAuxDisplayInfos[i].interlaceFlag == true) {
-                    builder.append("i");
-                    builder.append(String.format("%.2f", mAuxDisplayInfos[i].refreshRate));
-                } else {
-                    builder.append("p");
-                    builder.append(String.format("%.2f", mAuxDisplayInfos[i].refreshRate));
-                }
-                Log.d(TAG, "aux mode = " + mode + ", builder = " + builder.toString());
-                if (mode.equals(builder.toString())) {
-                    info = mAuxDisplayInfos[i];
-                    break;
-                }
+            idx = Integer.parseInt(mode_str[1]);
+            if (mCurDisplayInfos != null && idx >= mCurDisplayInfos.length) {
+                idx = 0;
             }
+            info = mCurDisplayInfos[idx];
         }
+
         if(info == null) {
             return;
         }
 
         builder.delete(0, builder.length());
         builder.append(info.width).append("x").append(info.height);
+/*
+        if (info.interlaceFlag == true)
+            builder.append("i");
+        else
+            builder.append("p");
+*/
         builder.append("@");
         builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
         builder.append("-");
@@ -612,6 +603,7 @@ public class RkDisplayModes {
                         builder.append("p");
                         builder.append(String.format(Locale.ENGLISH, "%.2f", info.refreshRate));
                     }
+                    builder.append("-").append(info.idx);
                     break;
                 }
             }
@@ -717,17 +709,12 @@ public class RkDisplayModes {
     public  List<String> getSupportCorlorList(int dpy){
         List<String> colorList = new ArrayList<>();
         int builtIn = nativeGetBuiltIn(dpy);
+        RkDisplayModes.RkColorCapacityInfo mCurColorInfos;
 
         Log.e(TAG, "getSupportCorlorList =========== dpy " + dpy);
-        if (dpy == 0) {
-            mMainColorInfos = nativeGetCorlorModeConfigs(dpy);
-            if (mMainColorInfos != null)
-                return mMainColorInfos.getCorlorModeList(builtIn);
-        } else {
-            mAuxColorInfos = nativeGetCorlorModeConfigs(dpy);
-            if (mAuxColorInfos != null)
-                return mAuxColorInfos.getCorlorModeList(builtIn);
-        }
+        mCurColorInfos = nativeGetCorlorModeConfigs(dpy);
+        if (mCurColorInfos != null)
+            return mCurColorInfos.getCorlorModeList(builtIn);
 
         return null;
     }
@@ -738,11 +725,7 @@ public class RkDisplayModes {
         RkDisplayModes.RkColorCapacityInfo mCurColorInfos;
 
         mCurColorMode = nativeGetCurCorlorMode(dpy);
-        if (dpy == MAIN_DISPLAY) {
-            mCurColorInfos = mMainColorInfos;
-        } else {
-            mCurColorInfos = mAuxColorInfos;
-        }
+        mCurColorInfos = nativeGetCorlorModeConfigs(dpy);
         if (mCurColorInfos != null && mCurColorMode != null && !mCurColorMode.contains("Auto")) {
             List<String> corlorList = getSupportCorlorList(dpy);
             for (int i = 0; i < corlorList.size(); i++) {
@@ -754,11 +737,16 @@ public class RkDisplayModes {
             return mCurColorMode;
         }
 
+        Log.d(TAG, "getCurColorMode mCurColorMode = " + mCurColorMode);
+
         String mColorMode = readColorFormatFromNode();
         if (mColorMode != null)
             mCurColorMode = mColorMode;
         if (mCurColorMode == null)
            mCurColorMode = "RGB-8bit";
+        if (mCurColorMode.equals("")) {
+            mCurColorMode = "Auto";
+        }
         Log.d(TAG, "getCurColorMode ===========  " + mCurColorMode);
         return mCurColorMode;
     }
