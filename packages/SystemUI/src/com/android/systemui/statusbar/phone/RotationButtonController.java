@@ -96,7 +96,7 @@ public class RotationButtonController {
                 // new screen rotation and hide any showing suggestions.
                 if (mRotationLockController.isRotationLocked()) {
                     if (shouldOverrideUserLockPrefs(rotation)) {
-                        setRotationLockedAtAngle(rotation);
+                        //setRotationLockedAtAngle(rotation);
                     }
                     setRotateSuggestionButtonState(false /* visible */, true /* forced */);
                 }
