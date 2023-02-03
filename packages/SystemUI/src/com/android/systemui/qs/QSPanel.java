@@ -47,6 +47,7 @@ import com.android.systemui.statusbar.policy.BrightnessMirrorController;
 import com.android.systemui.tuner.TunerService;
 import com.android.systemui.tuner.TunerService.Tunable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,6 +62,8 @@ public class QSPanel extends LinearLayout implements Tunable {
     protected final Context mContext;
     private final int mMediaTopMargin;
     private final int mMediaTotalBottomMargin;
+    private static final String CHECK_DSI_SYSFS_PATH = "/sys/class/drm/card0-DSI-1/status";
+    private static final String CHECK_EDP_SYSFS_PATH = "/sys/class/drm/card0-eDP-1/status";
 
     /**
      * The index where the content starts that needs to be moved between parents
@@ -287,7 +290,12 @@ public class QSPanel extends LinearLayout implements Tunable {
     }
 
     private void updateViewVisibilityForTuningValue(View view, @Nullable String newValue) {
-        view.setVisibility(TunerService.parseIntegerSwitch(newValue, true) ? VISIBLE : GONE);
+        File dsiFile = new File(CHECK_DSI_SYSFS_PATH);
+        File edpFile = new File(CHECK_EDP_SYSFS_PATH);
+        if(dsiFile.exists() || edpFile.exists())
+            view.setVisibility(TunerService.parseIntegerSwitch(newValue, true) ? VISIBLE : GONE);
+        else
+            view.setVisibility(GONE);
     }
 
     /** */
