@@ -315,4 +315,8 @@ public class StatusBarWindowController {
             mLpChanged.privateFlags &= ~PRIVATE_FLAG_FORCE_SHOW_STATUS_BAR;
         }
     }
+
+    public ViewGroup getStatusBarWindowView() {
+        return mStatusBarWindowView;
+    }
 }

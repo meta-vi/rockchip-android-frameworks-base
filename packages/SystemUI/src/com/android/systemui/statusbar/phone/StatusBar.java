@@ -263,11 +263,15 @@ public class StatusBar extends SystemUI implements
         LifecycleOwner {
     public static final boolean MULTIUSER_DEBUG = false;
 
+    private RegisterStatusBarResult mRegisterStatusBarResult;
     protected static final int MSG_DISMISS_KEYBOARD_SHORTCUTS_MENU = 1027;
 
     // Should match the values in PhoneWindowManager
     public static final String SYSTEM_DIALOG_REASON_RECENT_APPS = "recentapps";
     static public final String SYSTEM_DIALOG_REASON_SCREENSHOT = "screenshot";
+
+    static final String HIDE_NAVIGATION_BAR = "android.intent.action.HIDE_NAVIGATION_BAR";
+    static final String SHOW_NAVIGATION_BAR = "android.intent.action.SHOW_NAVIGATION_BAR";
 
     private static final String BANNER_ACTION_CANCEL =
             "com.android.systemui.statusbar.banner_action_cancel";
@@ -965,6 +969,7 @@ public class StatusBar extends SystemUI implements
             ex.rethrowFromSystemServer();
         }
 
+        mRegisterStatusBarResult = result;
         createAndAddWindows(result);
 
         if (mWallpaperSupported) {
@@ -1406,6 +1411,8 @@ public class StatusBar extends SystemUI implements
         filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(DevicePolicyManager.ACTION_SHOW_DEVICE_MONITORING_DIALOG);
+        filter.addAction(HIDE_NAVIGATION_BAR);
+        filter.addAction(SHOW_NAVIGATION_BAR);
         mBroadcastDispatcher.registerReceiver(mBroadcastReceiver, filter, null, UserHandle.ALL);
     }
 
@@ -2423,6 +2430,15 @@ public class StatusBar extends SystemUI implements
         makeStatusBarView(result);
         mNotificationShadeWindowController.attach();
         mStatusBarWindowController.attach();
+        //full screen
+        if (SystemProperties.getBoolean("persist.fullscreen.enable", false)) {
+            Log.d(TAG,"HIDE_NAVIGATION_BAR");
+            hideNavigation();
+        }
+        /*else {
+            Log.d(TAG,"SHOW_NAVIGATION_BAR");
+            displayNavigation();
+        }*/
     }
 
     // called by makeStatusbar and also by PhoneStatusBarView
@@ -2670,6 +2686,33 @@ public class StatusBar extends SystemUI implements
             Trace.endSection();
         }
     };
+
+    public void hideNavigation() {
+        NavigationBarView mNavigationBarView = mNavigationBarController.getDefaultNavigationBarView();
+        if (mNavigationBarView != null) {
+            mNavigationBarController.onDisplayRemoved(mDisplayId);
+        }
+        ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
+        if (tempStatusBar != null){
+            tempStatusBar.setVisibility(View.GONE);
+            //SystemProperties.set("sys.systembar.hide","1");
+        }
+    }
+
+    public void displayNavigation() {
+        NavigationBarView mNavigationBarView = mNavigationBarController.getDefaultNavigationBarView();
+        if (mNavigationBarView == null) {
+            createNavigationBar(mRegisterStatusBarResult);
+        }
+
+        ViewGroup tempStatusBar = mStatusBarWindowController.getStatusBarWindowView();
+        if (tempStatusBar != null){
+            tempStatusBar.setVisibility(View.VISIBLE);
+            requestNotificationUpdate("StatusBar state changed");
+            checkBarModes();
+            //SystemProperties.set("sys.systembar.hide","0");
+        }
+    }
 
     private final BroadcastReceiver mDemoReceiver = new BroadcastReceiver() {
         @Override
