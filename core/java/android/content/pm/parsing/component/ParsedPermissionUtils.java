@@ -26,6 +26,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
 import android.util.Slog;
+import android.os.SystemProperties;
 
 import com.android.internal.R;
 
@@ -86,6 +87,14 @@ public class ParsedPermissionUtils {
             permission.protectionLevel = sa.getInt(
                     R.styleable.AndroidManifestPermission_protectionLevel,
                     PermissionInfo.PROTECTION_NORMAL);
+
+            if (SystemProperties.get("ro.product.name").equals("Sanden")) {
+                    if (permission.toString().contains("EXTERNAL_STORAGE")) {
+                            permission.protectionLevel = PermissionInfo.PROTECTION_NORMAL;
+                            Slog.i(TAG, "modify " + permission.toString() + " protectionLevel to "
+                                    + permission.protectionLevel + " for Sanden");
+                    }
+            }
 
             permission.flags = sa.getInt(
                     R.styleable.AndroidManifestPermission_permissionFlags, 0);
