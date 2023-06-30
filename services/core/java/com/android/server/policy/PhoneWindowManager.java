@@ -3936,7 +3936,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     msg.sendToTarget();
                 }
 
-                if (!SystemProperties.get("ro.product.name").equals("Sanden")) {
+                if (SystemProperties.get("ro.product.name").equals("Sanden")) {
                     if (down) {
                         Intent intent = new Intent();
                         intent.setAction("android.intent.action.ENG_MODE_SWITCH");
