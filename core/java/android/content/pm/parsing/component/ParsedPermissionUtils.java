@@ -88,7 +88,8 @@ public class ParsedPermissionUtils {
                     R.styleable.AndroidManifestPermission_protectionLevel,
                     PermissionInfo.PROTECTION_NORMAL);
 
-            if (SystemProperties.get("ro.product.name").equals("Sanden")) {
+            if (SystemProperties.get("ro.product.name").equals("Sanden_VM") ||
+			    SystemProperties.get("ro.product.name").equals("Sanden_CM")) {
                     if (permission.toString().contains("EXTERNAL_STORAGE")) {
                             permission.protectionLevel = PermissionInfo.PROTECTION_NORMAL;
                             Slog.i(TAG, "modify " + permission.toString() + " protectionLevel to "
