@@ -2435,10 +2435,10 @@ public class StatusBar extends SystemUI implements
             Log.d(TAG,"HIDE_NAVIGATION_BAR");
             hideNavigation();
         }
-        /*else {
+        else {
             Log.d(TAG,"SHOW_NAVIGATION_BAR");
             displayNavigation();
-        }*/
+        }
     }
 
     // called by makeStatusbar and also by PhoneStatusBarView
