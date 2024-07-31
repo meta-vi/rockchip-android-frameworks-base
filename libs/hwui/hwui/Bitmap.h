@@ -71,6 +71,7 @@ public:
     static sk_sp<Bitmap> allocateHardwareBitmap(const SkBitmap& bitmap);
     static sk_sp<Bitmap> allocateHeapBitmap(SkBitmap* bitmap);
     static sk_sp<Bitmap> allocateHeapBitmap(const SkImageInfo& info);
+    static sk_sp<Bitmap> allocateHeapAlignedBitmap(SkBitmap* bitmap, int alignment);
 
     /* The createFrom factories construct a new Bitmap object by wrapping the already allocated
      * memory that is provided as an input param.

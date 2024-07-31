@@ -657,6 +657,20 @@ public final class Bitmap implements Parcelable {
         src.position(position);
     }
 
+    /**
+     * <p>Get native buffer address for direct access when convert image data</p>
+     */
+    public long getNativeBufferAddress() {
+        return nativeGetNativeBufferAddress(mNativePtr);
+    }
+
+    /**
+     * <p>Notify pixels change</p>
+     */
+    public void notifyPixelsChanged() {
+        nativeNotifyPixelsChanged(mNativePtr);
+    }
+
     private void noteHardwareBitmapSlowCall() {
         if (getConfig() == Config.HARDWARE) {
             StrictMode.noteSlowCall("Warning: attempt to read pixels from hardware "
@@ -1326,6 +1340,43 @@ public final class Bitmap implements Parcelable {
             bitmap.setImmutable();
             return bitmap;
         }
+    }
+
+    /**
+     * Creates a Bitmap from the given {@link Picture} source of recorded drawing commands.
+     *
+     * The bitmap will be immutable with the given width and height. If the width and height
+     * are not the same as the Picture's width & height, the Picture will be scaled to
+     * fit the given width and height.
+     *
+     * @param width The width of the bitmap to create. The picture's width will be
+     *              scaled to match if necessary.
+     * @param height The height of the bitmap to create. The picture's height will be
+     *              scaled to match if necessary.
+     * @param config The {@link Config} of the created bitmap.
+     * @param alignment Allocate memory with alignment. If alignment <= 0 -> skip
+     * 
+     * @return An immutable bitmap with a configuration specified by the config parameter
+     */
+    public static @NonNull Bitmap createBitmapAlignment(int width, int height,
+            @NonNull Config config, int alignement) {
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("width and height must be > 0");
+        }
+        ColorSpace colorSpace = ColorSpace.get(ColorSpace.Named.SRGB);
+
+        Bitmap bm = nativeCreateAligned(null, 0, width, width, height, config.nativeInt, true,
+                colorSpace == null ? 0 : colorSpace.getNativeInstance(), alignement);
+
+        boolean hasAlpha = true;
+        bm.setHasAlpha(hasAlpha);
+        if ((config == Config.ARGB_8888 || config == Config.RGBA_F16) && !hasAlpha) {
+            nativeErase(bm.mNativePtr, 0xff000000);
+        }
+        // No need to initialize the bitmap to zeroes with other configs;
+        // it is backed by a VM byte array which is by definition preinitialized
+        // to all zeroes.
+        return bm;
     }
 
     /**
@@ -2262,6 +2313,11 @@ public final class Bitmap implements Parcelable {
                                               int stride, int width, int height,
                                               int nativeConfig, boolean mutable,
                                               long nativeColorSpace);
+    private static native Bitmap nativeCreateAligned(int[] colors, int offset,
+                                              int stride, int width, int height,
+                                              int nativeConfig, boolean mutable,
+                                              long nativeColorSpace, int alignement);
+
     private static native Bitmap nativeCopy(long nativeSrcBitmap, int nativeConfig,
                                             boolean isMutable);
     private static native Bitmap nativeCopyAshmem(long nativeSrcBitmap);
@@ -2293,6 +2349,8 @@ public final class Bitmap implements Parcelable {
     private static native void nativeCopyPixelsToBuffer(long nativeBitmap,
                                                         Buffer dst);
     private static native void nativeCopyPixelsFromBuffer(long nativeBitmap, Buffer src);
+    private static native long nativeGetNativeBufferAddress(long nativeBitmap);
+    private static native void nativeNotifyPixelsChanged(long nativeBitmap);
     private static native int nativeGenerationId(long nativeBitmap);
 
     private static native Bitmap nativeCreateFromParcel(Parcel p);

@@ -322,6 +322,49 @@ static jobject Bitmap_creator(JNIEnv* env, jobject, jintArray jColors,
     return createBitmap(env, nativeBitmap.release(), getPremulBitmapCreateFlags(isMutable));
 }
 
+static jobject Bitmap_creator_aligned(JNIEnv* env, jobject, jintArray jColors,
+                              jint offset, jint stride, jint width, jint height,
+                              jint configHandle, jboolean isMutable,
+                              jlong colorSpacePtr, jint alignment) {
+    SkColorType colorType = GraphicsJNI::legacyBitmapConfigToColorType(configHandle);
+    if (NULL != jColors) {
+        size_t n = env->GetArrayLength(jColors);
+        if (n < SkAbs32(stride) * (size_t)height) {
+            doThrowAIOOBE(env);
+            return NULL;
+        }
+    }
+
+    // ARGB_4444 is a deprecated format, convert automatically to 8888
+    if (colorType == kARGB_4444_SkColorType) {
+        colorType = kN32_SkColorType;
+    }
+
+    sk_sp<SkColorSpace> colorSpace;
+    if (colorType == kAlpha_8_SkColorType) {
+        colorSpace = nullptr;
+    } else {
+        colorSpace = GraphicsJNI::getNativeColorSpace(colorSpacePtr);
+    }
+
+    SkBitmap bitmap;
+    bitmap.setInfo(SkImageInfo::Make(width, height, colorType, kPremul_SkAlphaType,
+                colorSpace));
+
+    sk_sp<Bitmap> nativeBitmap = Bitmap::allocateHeapAlignedBitmap(&bitmap, alignment);
+    if (!nativeBitmap) {
+        ALOGE("OOM allocating Bitmap with dimensions %i x %i", width, height);
+        doThrowOOME(env);
+        return NULL;
+    }
+
+    if (jColors != NULL) {
+        GraphicsJNI::SetPixels(env, jColors, offset, stride, 0, 0, width, height, &bitmap);
+    }
+
+    return createBitmap(env, nativeBitmap.release(), getPremulBitmapCreateFlags(isMutable));
+}
+
 static bool bitmapCopyTo(SkBitmap* dst, SkColorType dstCT, const SkBitmap& src,
         SkBitmap::Allocator* alloc) {
     SkPixmap srcPM;
@@ -963,6 +1006,18 @@ static void Bitmap_copyPixelsFromBuffer(JNIEnv* env, jobject,
     }
 }
 
+static long Bitmap_getNativeBufferAddress(JNIEnv* env, jobject, jlong bitmapHandle) {
+    SkBitmap bitmap;
+    reinterpret_cast<BitmapWrapper*>(bitmapHandle)->getSkBitmap(&bitmap);
+    return (long)bitmap.getPixels();
+}
+
+static void Bitmap_notifyPixelsChanged(JNIEnv* env, jobject, jlong bitmapHandle) {
+    SkBitmap bitmap;
+    reinterpret_cast<BitmapWrapper*>(bitmapHandle)->getSkBitmap(&bitmap);
+    bitmap.notifyPixelsChanged();
+}
+
 static jboolean Bitmap_sameAs(JNIEnv* env, jobject, jlong bm0Handle, jlong bm1Handle) {
     SkBitmap bm0;
     SkBitmap bm1;
@@ -1103,6 +1158,8 @@ static void Bitmap_setImmutable(JNIEnv* env, jobject, jlong bitmapHandle) {
 static const JNINativeMethod gBitmapMethods[] = {
     {   "nativeCreate",             "([IIIIIIZJ)Landroid/graphics/Bitmap;",
         (void*)Bitmap_creator },
+    {   "nativeCreateAligned",             "([IIIIIIZJI)Landroid/graphics/Bitmap;",
+        (void*)Bitmap_creator_aligned },
     {   "nativeCopy",               "(JIZ)Landroid/graphics/Bitmap;",
         (void*)Bitmap_copy },
     {   "nativeCopyAshmem",         "(J)Landroid/graphics/Bitmap;",
@@ -1141,6 +1198,8 @@ static const JNINativeMethod gBitmapMethods[] = {
                                             (void*)Bitmap_copyPixelsToBuffer },
     {   "nativeCopyPixelsFromBuffer", "(JLjava/nio/Buffer;)V",
                                             (void*)Bitmap_copyPixelsFromBuffer },
+    {   "nativeGetNativeBufferAddress", "(J)J", (void*)Bitmap_getNativeBufferAddress },
+    {   "nativeNotifyPixelsChanged",    "(J)V", (void*)Bitmap_notifyPixelsChanged },
     {   "nativeSameAs",             "(JJ)Z", (void*)Bitmap_sameAs },
     {   "nativePrepareToDraw",      "(J)V", (void*)Bitmap_prepareToDraw },
     {   "nativeGetAllocationByteCount", "(J)I", (void*)Bitmap_getAllocationByteCount },

@@ -124,6 +124,43 @@ sk_sp<Bitmap> Bitmap::allocateHeapBitmap(const SkImageInfo& info) {
     return allocateHeapBitmap(size, info, info.minRowBytes());
 }
 
+// Function to allocate aligned memory
+void* aligned_malloc(size_t size, size_t alignment) {
+    void* ptr = nullptr;
+    if (posix_memalign(&ptr, alignment, size) != 0) {
+        return nullptr; // Allocation failed
+    }
+    return ptr;
+}
+
+sk_sp<Bitmap> Bitmap::allocateHeapAlignedBitmap(SkBitmap* bitmap, int alignment) {
+    const SkImageInfo& info = bitmap->info();
+    if (info.colorType() == kUnknown_SkColorType) {
+        LOG_ALWAYS_FATAL("unknown bitmap configuration");
+        return nullptr;
+    }
+
+    size_t size;
+
+    // we must respect the rowBytes value already set on the bitmap instead of
+    // attempting to compute our own.
+    const size_t rowBytes = bitmap->rowBytes();
+    if (!Bitmap::computeAllocationSize(rowBytes, bitmap->height(), &size)) {
+        return nullptr;
+    }
+
+    void* addr = aligned_malloc(size, alignment);
+
+    if (!addr) {
+        return nullptr;
+    }
+    auto wrapper = sk_sp<Bitmap>(new Bitmap(addr, size, info, rowBytes));
+    if (wrapper) {
+        wrapper->getSkBitmap(bitmap);
+    }
+    return wrapper;
+}
+
 sk_sp<Bitmap> Bitmap::allocateHeapBitmap(size_t size, const SkImageInfo& info, size_t rowBytes) {
     void* addr = calloc(size, 1);
     if (!addr) {
